@@ -3,7 +3,9 @@ module github.com/rodatboat/crong
 go 1.26.4
 
 require (
+	github.com/MicahParks/keyfunc/v2 v2.1.0 // indirect
 	github.com/andybalholm/brotli v1.2.1 // indirect
+	github.com/gofiber/contrib/v3/jwt v1.1.6 // indirect
 	github.com/gofiber/fiber/v3 v3.3.0 // indirect
 	github.com/gofiber/schema v1.8.0 // indirect
 	github.com/gofiber/utils/v2 v2.1.0 // indirect
