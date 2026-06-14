@@ -1,6 +1,13 @@
 # crong
 Schedule and automate API calls.
 
+# Setup
+
+## Environment
+```bash
+AUTH_SECRET=your_secret_key_here
+```
+
 # Tools
 ## Cron
 - https://github.com/go-co-op/gocron

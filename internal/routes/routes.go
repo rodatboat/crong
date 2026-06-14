@@ -8,4 +8,9 @@ func RegisterRoutes(app *fiber.App) {
 	// Initialize route handlers
 	FolderRoutes(api)
 	JobsRoutes(api)
+
+	// Catch-all route for undefined endpoints
+	app.Use(func(c fiber.Ctx) error {
+		return c.SendStatus(fiber.StatusNotFound) // => 404 "Not Found"
+	})
 }

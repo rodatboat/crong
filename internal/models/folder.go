@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Folder struct {
 	ID   uint   `json:"id"`
@@ -8,4 +10,13 @@ type Folder struct {
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type FolderCreate struct {
+	Name string `json:"name" validate:"required"`
+}
+
+type FolderUpdate struct {
+	ID   uint   `json:"id" validate:"required"`
+	Name string `json:"name" validate:"required"`
 }
