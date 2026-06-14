@@ -45,26 +45,6 @@ crong/
 │   └── worker/
 │       └── main.go          # cron runner
 │
-├── internal/
-│   ├── config/
-│   ├── database/
-│
-│   ├── models/              # GORM models (jobs included here)
-│   │   ├── user.go
-│   │   └── job.go
-│
-│   ├── dto/
-│
-│   ├── handlers/            # HTTP layer only
-│
-│   ├── services/            # business logic
-│   │   ├── user_service.go
-│   │   └── job_service.go
-│
-│   ├── repositories/
-│   │   ├── user_repo.go
-│   │   └── job_repo.go
-│
 │   ├── scheduler/           # cron system
 │   │   ├── scheduler.go
 │   │   ├── runner.go
@@ -75,9 +55,6 @@ crong/
 │   │   ├── email_worker.go
 │   │   ├── webhook_worker.go
 │   │   └── cleanup_worker.go
-│
-│   ├── routes/
-│   └── middleware/
 │
 └── go.mod
 
