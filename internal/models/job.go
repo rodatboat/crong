@@ -24,7 +24,7 @@ type Job struct {
 	UpdatedAt     time.Time `json:"updated_at"`
 }
 
-type JobCreate struct {
+type JobUpdateRequest struct {
 	Title    string `json:"title" validate:"required"`
 	Url      string `json:"url" validate:"required"`
 	FolderID uint   `json:"folder_id"`
