@@ -6,6 +6,6 @@ import (
 
 type Folder struct {
 	gorm.Model
-	Name   string `gorm:"not null" json:"name"`
-	UserID uint   `json:"user_id"`
+	Name   string `gorm:"column:name;not null"`
+	UserID uint   `gorm:"column:user_id;not null"`
 }

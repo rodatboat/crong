@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/rodatboat/crong/internal/entities"
 )
 
 type Job struct {
@@ -10,10 +12,11 @@ type Job struct {
 	Url      string `json:"url"`
 	FolderID uint   `json:"folder_id"`
 
-	Method  ReqMethod         `json:"method"`
-	Headers map[string]string `json:"headers"`
-	Auth    *JobAuth          `json:"auth"`
-	Body    string            `json:"body"`
+	Method  entities.ReqMethod `json:"method"`
+	Headers map[string]string  `json:"headers"`
+	Auth    JobAuth            `json:"auth"`
+	Body    string             `json:"body"`
+	Cron    string             `json:"cron"`
 
 	Timezone string `json:"timezone"`
 	Timeout  int    `json:"timeout"`
@@ -24,19 +27,24 @@ type Job struct {
 	UpdatedAt     time.Time `json:"updated_at"`
 }
 
-type JobUpdateRequest struct {
+type JobCreateRequest struct {
 	Title    string `json:"title" validate:"required"`
 	Url      string `json:"url" validate:"required"`
 	FolderID uint   `json:"folder_id"`
 
-	Method  ReqMethod         `json:"method"`
-	Headers map[string]string `json:"headers"`
-	Auth    *JobAuth          `json:"auth"`
-	Body    string            `json:"body"`
+	Method  entities.ReqMethod `json:"method" validate:"required"`
+	Headers map[string]string  `json:"headers"`
+	Auth    JobAuth            `json:"auth"`
+	Body    string             `json:"body"`
+	Cron    string             `json:"cron" validate:"required,min=9"`
 
 	Timezone string `json:"timezone"`
 	Timeout  int    `json:"timeout" validate:"required,max=30"`
 	Enabled  bool   `json:"enabled"`
+}
+
+type JobUpdateRequest struct {
+	JobCreateRequest
 }
 
 type JobAuth struct {
@@ -44,18 +52,3 @@ type JobAuth struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
-
-type ReqMethod int
-
-const (
-	GET ReqMethod = iota
-	POST
-	PUT
-	PATCH
-	DELETE
-
-	OPTIONS
-	HEAD
-	TRACE
-	CONNECT
-)

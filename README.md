@@ -8,6 +8,25 @@ Schedule and automate API calls.
 AUTH_SECRET=your_secret_key_here
 ```
 
+## DB Migrations using Goose
+Start DB Container Locally
+```bash
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=password
+POSTGRES_DB=postgres
+```
+
+Run Migrations
+```bash
+# DB name: crong
+# user: postgres
+# password: password
+# host: localhost:5432
+# migrations folder: ./migrations
+# schema: crong
+goose -dir ./migrations postgres "postgres://postgres:password@localhost:5432/crong?sslmode=disable&search_path=crong" up
+```
+
 # Tools
 ## Cron
 - https://github.com/go-co-op/gocron
