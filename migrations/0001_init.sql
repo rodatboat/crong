@@ -31,6 +31,7 @@ CREATE TABLE jobs (
     method SMALLINT NOT NULL,
     headers JSONB,
     auth JSONB,
+    cron TEXT NOT NULL,
 
     body TEXT,
 

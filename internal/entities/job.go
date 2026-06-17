@@ -37,6 +37,7 @@ type Job struct {
 	Headers datatypes.JSON `gorm:"column:headers"`
 	Auth    datatypes.JSON `gorm:"column:auth"`
 	Body    string         `gorm:"column:body"`
+	Cron    string         `gorm:"column:cron;not null"`
 
 	Timezone string `gorm:"column:timezone;not null;default:'UTC'"`
 

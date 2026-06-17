@@ -13,7 +13,7 @@ type Job struct {
 	FolderID uint   `json:"folder_id"`
 
 	Method  entities.ReqMethod `json:"method"`
-	Headers map[string]string  `json:"headers"`
+	Headers []JobHeaders       `json:"headers"`
 	Auth    JobAuth            `json:"auth"`
 	Body    string             `json:"body"`
 	Cron    string             `json:"cron"`
@@ -33,7 +33,7 @@ type JobCreateRequest struct {
 	FolderID uint   `json:"folder_id"`
 
 	Method  entities.ReqMethod `json:"method" validate:"required"`
-	Headers map[string]string  `json:"headers"`
+	Headers []JobHeaders       `json:"headers"`
 	Auth    JobAuth            `json:"auth"`
 	Body    string             `json:"body"`
 	Cron    string             `json:"cron" validate:"required,min=9"`
@@ -51,4 +51,22 @@ type JobAuth struct {
 	Enabled  bool   `json:"enabled"`
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+type JobHeaders struct {
+	Key   bool   `json:"key" validate:"max=255"`
+	Value string `json:"value" validate:"max=1024"`
+}
+
+type JobExecution struct {
+	ID              uint      `json:"id"`
+	JobID           uint      `json:"job_id"`
+	Success         bool      `json:"success"`
+	StatusCode      int       `json:"status_code"`
+	DurationMs      int       `json:"duration_ms"`
+	Url             string    `json:"url"`
+	ResponseBody    string    `json:"response_body"`
+	Error           string    `json:"error"`
+	ExecutedAt      time.Time `json:"executed_at"`
+	BatchIdentifier string    `json:"batch_identifier"`
 }
