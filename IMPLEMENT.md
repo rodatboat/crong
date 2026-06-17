@@ -26,7 +26,7 @@ Add a background scheduling system to an existing Go + Fiber application that:
 2. **Scheduler Goroutine (tick-based)**
 
    * Runs every 60 seconds
-   * Queries DB for due jobs (`next_run_at <= now`)
+   * Queries DB for due jobs
    * Pushes jobs into execution queue
 
 3. **Worker Pool**
@@ -45,30 +45,113 @@ Add a background scheduling system to an existing Go + Fiber application that:
 
 ## 3. Database Schema (required)
 
+### Normalized Schedule Decomposition Schema
+
+Jobs are stored with **exploded schedule tables** to enable efficient per-minute queries without cron parsing:
+
+```
+job                 -- Main job definition
+├── job_hours       -- Hour(s) the job runs
+├── job_minutes     -- Minute(s) the job runs
+├── job_mdays       -- Day(s) of month the job runs
+├── job_wdays       -- Day(s) of week the job runs
+├── job_months      -- Month(s) the job runs
+└── job_runs        -- Execution history
+```
+
 ### jobs
 
 * id (uuid / bigint)
+* user_id (foreign key)
 * url (string)
 * method (string: GET/POST/PATCH/DELETE)
 * headers (json)
 * body (text/json)
-* schedule (cron expression string)
-* next_run_at (timestamp)
-* last_run_at (timestamp)
+* timezone (string, default: 'UTC')
+* enabled (bool)
 * created_at (timestamp)
 * updated_at (timestamp)
 
+**Key difference from cron string approach:** No schedule column. Schedule is decomposed into separate tables below.
+
+### job_minutes
+
+* job_id (composite PK)
+* minute (integer 0-59, or -1 for "any")
+
+Unique key: (job_id, minute)
+
+### job_hours
+
+* job_id (composite PK)
+* hour (integer 0-23, or -1 for "any")
+
+Unique key: (job_id, hour)
+
+### job_mdays
+
+* job_id (composite PK)
+* mday (integer 1-31, or -1 for "any")
+
+Unique key: (job_id, mday)
+
+### job_wdays
+
+* job_id (composite PK)
+* wday (integer 0-6, or -1 for "any") [0=Sunday, 6=Saturday]
+
+Unique key: (job_id, wday)
+
+### job_months
+
+* job_id (composite PK)
+* month (integer 1-12, or -1 for "any")
+
+Unique key: (job_id, month)
+
 ### job_runs
 
-* id
-* job_id
-* status (success/fail)
-* http_status_code
+* id (primary key)
+* job_id (foreign key)
+* status (success/fail/timeout)
+* http_status_code (integer, nullable)
 * response_body (text, truncated if needed)
-* error_message
-* started_at
-* finished_at
-* duration_ms
+* error_message (text, nullable)
+* started_at (timestamp)
+* finished_at (timestamp)
+* duration_ms (integer)
+
+---
+
+### Example: Job that runs every minute
+
+Cron: `* * * * *` (every minute)
+
+**jobs:**
+```
+id=123, user_id=1, url=..., enabled=1, timezone='UTC'
+```
+
+**job_minutes:** 60 rows (0-59, all minutes)
+**job_hours:** 24 rows (0-23, all hours)
+**job_mdays:** 1 row (-1, any day)
+**job_wdays:** 1 row (-1, any day of week)
+**job_months:** 1 row (-1, any month)
+
+### Example: Job that runs at 9:00 AM every day
+
+Cron: `0 9 * * *`
+
+**jobs:**
+```
+id=456, user_id=1, url=..., enabled=1, timezone='UTC'
+```
+
+**job_minutes:** 1 row (minute=0)
+**job_hours:** 1 row (hour=9)
+**job_mdays:** 1 row (mday=-1)
+**job_wdays:** 1 row (wday=-1)
+**job_months:** 1 row (month=-1)
 
 ---
 
@@ -93,32 +176,62 @@ Workers:
 
 ### 4.2 Scheduler Loop (non-blocking)
 
-Runs independently:
+Runs independently every 60 seconds:
 
-* Every 60 seconds:
+```go
+for {
+    select {
+    case <-ticker.C:
+        // Query for jobs matching current minute
+        jobs := scheduler.QueryDueJobs(now)
+        for _, job := range jobs {
+            select {
+            case jobQueue <- job:
+                // Job queued
+            default:
+                // Queue full - log and skip (retry next minute)
+                log.Warn("job queue full", "job_id", job.ID)
+            }
+        }
+    case <-done:
+        return
+    }
+}
+```
 
-  * Query DB for due jobs
-  * Push into jobQueue (non-blocking send with backpressure handling)
+**Query Logic:**
+
+For the current minute (hour H, minute M, day D, month Mo, weekday W), execute:
+
+```sql
+SELECT j.* FROM jobs j
+INNER JOIN job_hours jh ON j.id = jh.job_id AND (jh.hour = H OR jh.hour = -1)
+INNER JOIN job_minutes jm ON j.id = jm.job_id AND (jm.minute = M OR jm.minute = -1)
+INNER JOIN job_mdays jmd ON j.id = jmd.job_id AND (jmd.mday = D OR jmd.mday = -1)
+INNER JOIN job_wdays jwd ON j.id = jwd.job_id AND (jwd.wday = W OR jwd.wday = -1)
+INNER JOIN job_months jmo ON j.id = jmo.job_id AND (jmo.month = Mo OR jmo.month = -1)
+WHERE j.enabled = 1
+GROUP BY j.id
+ORDER BY j.id ASC
+```
 
 Rules:
 
 * Must NOT execute jobs directly
 * Must NOT block on HTTP execution
 * Must NOT spawn unlimited goroutines
+* Must handle job queue backpressure (drop or log if full)
 
 ---
 
-### 4.3 Job Fetch Logic
+### 4.3 Job Fetch Logic (Stateless)
 
-Query:
+Key insight: **No state tracking needed**. Each minute's query inherently finds jobs due at that exact time.
 
-* `SELECT * FROM jobs WHERE next_run_at <= NOW()`
-
-Optional (recommended improvement):
-
-* Use row locking if multiple instances are possible:
-
-  * `FOR UPDATE SKIP LOCKED`
+* `GROUP BY job_id` deduplicates if a job matches multiple rules
+* INNER JOINs guarantee all schedule conditions must match
+* -1 values mean "match any" for that component
+* Query is idempotent—same job re-picked if schedule allows
 
 ---
 
@@ -147,9 +260,11 @@ For each job:
    * status code
    * response body (truncate if needed)
    * error (if any)
+   * duration
 5. Persist job_runs record
-6. Compute next_run_at using cron parser
-7. Update jobs table
+6. **No schedule update needed** — job will be re-picked by next minute's query if still due
+
+**Key difference:** No cron parsing or next_run_at computation. The query-based approach is stateless and idempotent.
 
 ---
 
@@ -191,20 +306,37 @@ System guarantees:
 
 ## 8. Scheduling Logic
 
-### 8.1 Cron Parsing
+### 8.1 Schedule Representation
 
-* Use Go cron parser (`robfig/cron`)
-* On job creation:
+Instead of storing a cron string and parsing it:
 
-  * compute initial `next_run_at`
+* **Accept cron expression from API** (e.g., `0 9 * * *`)
+* **Decompose into schedule tables** on job creation
+* **Query via INNER JOINs** on each scheduler tick
 
-### 8.2 After execution:
+Example: `0 9 * * *` (9 AM daily)
 
-* Recompute:
+```
+job_minutes: (job_id, 0)
+job_hours: (job_id, 9)
+job_mdays: (job_id, -1)  -- any day
+job_wdays: (job_id, -1)  -- any day of week
+job_months: (job_id, -1) -- any month
+```
 
-  ```
-  next_run_at = cron.Next(now)
-  ```
+### 8.2 Cron Parsing Strategy
+
+* On `POST /jobs` or `PATCH /jobs/:id`:
+  * Parse cron expression using Go cron parser (`robfig/cron/v3`)
+  * Extract all matching hours, minutes, mdays, wdays, months
+  * Populate schedule tables (delete old entries, insert new ones)
+  * Store -1 for "any" (e.g., day of month = -1 if not restricted)
+
+### 8.3 Per-Minute Query
+
+* No next_run_at timestamp needed
+* Scheduler queries what's due **right now** based on current time
+* Timezone-aware: convert current time to job's timezone before matching
 
 ---
 
@@ -212,12 +344,31 @@ System guarantees:
 
 ### Job endpoints
 
-* `POST /jobs` → create job + compute next_run_at
+* `POST /jobs` → create job + decompose cron into schedule tables
 * `GET /jobs` → list jobs
-* `GET /jobs/:id` → job details
+* `GET /jobs/:id` → job details (include schedule decomposition)
 * `GET /jobs/:id/runs` → execution history
-* `DELETE /jobs/:id` → remove job
-* `PATCH /jobs/:id` → update job definition
+* `DELETE /jobs/:id` → remove job + schedule table entries
+* `PATCH /jobs/:id` → update job definition + re-decompose schedule if cron changed
+
+### Request Body Format (POST/PATCH)
+
+```json
+{
+  "url": "https://example.com/webhook",
+  "method": "POST",
+  "headers": {"Content-Type": "application/json"},
+  "body": "{\"key\": \"value\"}",
+  "schedule": "0 9 * * *",
+  "timezone": "Europe/Berlin",
+  "enabled": true
+}
+```
+
+The `schedule` field is a cron expression. On job creation/update:
+1. Parse the cron expression
+2. Decompose into hours, minutes, mdays, wdays, months
+3. Populate schedule tables with matching values (-1 for "any")
 
 ---
 
@@ -273,16 +424,17 @@ Hard limits:
 
 ## 13. Implementation Order (for agent)
 
-1. Add DB schema migrations
-2. Implement job model + repository layer
-3. Implement Fiber CRUD endpoints
-4. Implement cron parsing + next_run_at calculation
-5. Implement worker pool + job queue
-6. Implement scheduler loop (tick every 60s)
-7. Implement HTTP execution function (timeout + logging)
-8. Implement job_runs persistence
-9. Wire everything in `main()`
-10. Add graceful shutdown (stop scheduler + workers)
+1. Add DB schema migrations (jobs + schedule tables + job_runs)
+2. Implement job model + repository layer (includes schedule tables)
+3. Implement cron decomposition function (parse cron → extract hours/minutes/mdays/wdays/months)
+4. Implement Fiber CRUD endpoints (POST/GET/PATCH/DELETE jobs)
+5. Implement schedule table population on job creation/update
+6. Implement scheduler query (INNER JOINs across schedule tables for due jobs)
+7. Implement worker pool + job queue
+8. Implement HTTP execution function (timeout + logging)
+9. Implement job_runs persistence
+10. Wire everything in `main()` (start scheduler, start worker pool, start API)
+11. Add graceful shutdown (stop scheduler + workers)
 
 ---
 
