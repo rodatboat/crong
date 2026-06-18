@@ -6,51 +6,88 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/rodatboat/crong/internal/models"
 	"github.com/rodatboat/crong/internal/response"
+	"github.com/rodatboat/crong/internal/services"
 )
 
-func CreateJob(c fiber.Ctx) error {
-	newJob := new(models.Job)
-	if err := c.Bind().Body(newJob); err != nil {
-		return err
-	}
-
-	// TODO: Call repository to create job in database
-
-	return response.Success(c, newJob)
+type JobHandler struct {
+	jobService *services.JobService
 }
 
-func ReadJobs(c fiber.Ctx) error {
+func NewJobHandler(jobService *services.JobService) *JobHandler {
+	return &JobHandler{
+		jobService: jobService,
+	}
+}
 
-	// TODO: Call repository to read jobs from database
+func (h *JobHandler) CreateJob(c fiber.Ctx) error {
+	var req models.JobCreateRequest
+	if err := c.Bind().Body(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
+	}
 
-	jobs := []models.Job{}
+	// TODO: Get user from context (from auth middleware)
+	// userID := c.Locals("user_id").(uint)
+
+	// Call service layer
+	job, err := h.jobService.CreateJob(1, &req)
+	if err != nil {
+		return response.Error(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	return response.Success(c, job)
+}
+
+func (h *JobHandler) ReadJobs(c fiber.Ctx) error {
+	// TODO: Get user from context
+	// userID := c.Locals("user_id").(uint)
+
+	// Call service layer
+	jobs, err := h.jobService.GetJobsByUser(1)
+	if err != nil {
+		return response.Error(c, fiber.StatusInternalServerError, err.Error())
+	}
 
 	return response.Success(c, jobs)
 }
 
-func UpdateJob(c fiber.Ctx) error {
-
-	jobId, err := strconv.Atoi(c.Params("id"))
+func (h *JobHandler) UpdateJob(c fiber.Ctx) error {
+	jobIDStr := c.Params("id")
+	jobID, err := strconv.ParseUint(jobIDStr, 10, 32)
 	if err != nil {
 		return response.Error(c, fiber.StatusBadRequest, "Invalid job ID")
 	}
 
-	// TODO: Call repository to update job in database
+	// TODO: Get user from context
+	// userID := c.Locals("user_id").(uint)
 
-	job := models.Job{
-		ID: uint(jobId),
+	var req models.JobUpdateRequest
+	if err := c.Bind().Body(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
 	}
 
-	return response.Success(c, &job)
+	// Call service layer
+	job, err := h.jobService.UpdateJob(uint(jobID), 1, &req)
+	if err != nil {
+		return response.Error(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	return response.Success(c, job)
 }
 
-func DeleteJob(c fiber.Ctx) error {
-	_, err := strconv.Atoi(c.Params("id"))
+func (h *JobHandler) DeleteJob(c fiber.Ctx) error {
+	jobIDStr := c.Params("id")
+	jobID, err := strconv.ParseUint(jobIDStr, 10, 32)
 	if err != nil {
 		return response.Error(c, fiber.StatusBadRequest, "Invalid job ID")
 	}
 
-	// TODO: Call repository to delete job from database
+	// TODO: Get user from context
+	// userID := c.Locals("user_id").(uint)
+
+	err = h.jobService.DeleteJob(uint(jobID), 1)
+	if err != nil {
+		return response.Error(c, fiber.StatusInternalServerError, err.Error())
+	}
 
 	return response.Success(c, nil)
 }

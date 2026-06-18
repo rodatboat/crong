@@ -6,28 +6,34 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/joho/godotenv"
+	"github.com/rodatboat/crong/internal/config"
+	"github.com/rodatboat/crong/internal/container"
 	"github.com/rodatboat/crong/internal/database"
 	"github.com/rodatboat/crong/internal/routes"
 )
 
 func main() {
 	// Load environment variables from .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	_ = godotenv.Load() // Ignore error if .env doesn't exist
+
+	// Load configuration
+	cfg := config.Load()
 
 	// Initialize database connection
-	database.InitDb()
+	db := database.InitDb(cfg)
 
-	// Initialize repositories
+	// Initialize dependency container (repositories, services)
+	svc := container.NewContainer(db)
 
-	// Initialize routes
+	// Initialize routes with container
 	app := fiber.New()
 	app.Use(cors.New())
 
-	routes.RegisterRoutes(app)
+	routes.RegisterRoutes(app, svc)
 
 	// Start the server
-	app.Listen(":3000")
+	log.Printf("Server starting on port %s", cfg.Port)
+	if err := app.Listen(":" + cfg.Port); err != nil {
+		log.Fatalf("Server error: %v", err)
+	}
 }
