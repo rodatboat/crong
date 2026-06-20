@@ -9,9 +9,10 @@ import (
 
 func JobsRoutes(app fiber.Router, serviceContainer *container.Container) {
 	jobs := app.Group("/jobs")
+	handler := handlers.NewJobHandler(serviceContainer.JobService)
 
-	jobs.Post("/", middleware.Protected(), handlers.NewJobHandler(serviceContainer.JobService).CreateJob)
-	jobs.Get("/", middleware.Protected(), handlers.NewJobHandler(serviceContainer.JobService).ReadJobs)
-	jobs.Put("/:id", middleware.Protected(), handlers.NewJobHandler(serviceContainer.JobService).UpdateJob)
-	jobs.Delete("/:id", middleware.Protected(), handlers.NewJobHandler(serviceContainer.JobService).DeleteJob)
+	jobs.Post("/", middleware.Protected(), handler.CreateJob)
+	jobs.Get("/", middleware.Protected(), handler.ReadJobs)
+	jobs.Put("/:id", middleware.Protected(), handler.UpdateJob)
+	jobs.Delete("/:id", middleware.Protected(), handler.DeleteJob)
 }

@@ -6,9 +6,20 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/rodatboat/crong/internal/models"
 	"github.com/rodatboat/crong/internal/response"
+	"github.com/rodatboat/crong/internal/services"
 )
 
-func CreateFolder(c fiber.Ctx) error {
+type FolderHandler struct {
+	folderService *services.FolderService
+}
+
+func NewFolderHandler(folderService *services.FolderService) *FolderHandler {
+	return &FolderHandler{
+		folderService: folderService,
+	}
+}
+
+func (h *FolderHandler) CreateFolder(c fiber.Ctx) error {
 	newFolder := new(models.Folder)
 	if err := c.Bind().Body(newFolder); err != nil {
 		return err
@@ -19,7 +30,7 @@ func CreateFolder(c fiber.Ctx) error {
 	return response.Success(c, newFolder)
 }
 
-func ReadFolders(c fiber.Ctx) error {
+func (h *FolderHandler) ReadFolders(c fiber.Ctx) error {
 
 	// TODO: Call repository to read folders from database
 
@@ -28,7 +39,7 @@ func ReadFolders(c fiber.Ctx) error {
 	return response.Success(c, folders)
 }
 
-func UpdateFolder(c fiber.Ctx) error {
+func (h *FolderHandler) UpdateFolder(c fiber.Ctx) error {
 
 	folderId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -44,7 +55,7 @@ func UpdateFolder(c fiber.Ctx) error {
 	return response.Success(c, &folder)
 }
 
-func DeleteFolder(c fiber.Ctx) error {
+func (h *FolderHandler) DeleteFolder(c fiber.Ctx) error {
 	_, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return response.Error(c, fiber.StatusBadRequest, "Invalid folder ID")

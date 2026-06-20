@@ -7,11 +7,12 @@ import (
 	"github.com/rodatboat/crong/internal/middleware"
 )
 
-func FolderRoutes(app fiber.Router, svc *container.Container) {
+func FolderRoutes(app fiber.Router, serviceContainer *container.Container) {
 	folders := app.Group("/folders")
+	handler := handlers.NewFolderHandler(serviceContainer.FolderService)
 
-	folders.Post("/", middleware.Protected(), handlers.CreateFolder)
-	folders.Get("/", middleware.Protected(), handlers.ReadFolders)
-	folders.Put("/:id", middleware.Protected(), handlers.UpdateFolder)
-	folders.Delete("/:id", middleware.Protected(), handlers.DeleteFolder)
+	folders.Post("/", middleware.Protected(), handler.CreateFolder)
+	folders.Get("/", middleware.Protected(), handler.ReadFolders)
+	folders.Put("/:id", middleware.Protected(), handler.UpdateFolder)
+	folders.Delete("/:id", middleware.Protected(), handler.DeleteFolder)
 }

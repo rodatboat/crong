@@ -12,7 +12,6 @@ import (
  * - Interacting with the database layer to persist job data
  * - Handling any complex logic related to job schedule syncing based on cron expression
  */
-
 type JobService struct {
 	jobRepo *repositories.JobRepository
 }
