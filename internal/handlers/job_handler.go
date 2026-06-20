@@ -7,6 +7,7 @@ import (
 	"github.com/rodatboat/crong/internal/models"
 	"github.com/rodatboat/crong/internal/response"
 	"github.com/rodatboat/crong/internal/services"
+	"github.com/rodatboat/crong/internal/utils"
 )
 
 type JobHandler struct {
@@ -23,6 +24,11 @@ func (h *JobHandler) CreateJob(c fiber.Ctx) error {
 	var req models.JobCreateRequest
 	if err := c.Bind().Body(&req); err != nil {
 		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
+	}
+
+	// Validate request
+	if err := utils.ValidateStruct(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	// TODO: Get user from context (from auth middleware)
@@ -63,6 +69,11 @@ func (h *JobHandler) UpdateJob(c fiber.Ctx) error {
 	var req models.JobUpdateRequest
 	if err := c.Bind().Body(&req); err != nil {
 		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
+	}
+
+	// Validate request
+	if err := utils.ValidateStruct(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	// Call service layer

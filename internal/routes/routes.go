@@ -5,13 +5,13 @@ import (
 	"github.com/rodatboat/crong/internal/container"
 )
 
-func RegisterRoutes(app *fiber.App, svc *container.Container) {
+func RegisterRoutes(app *fiber.App, serviceContainer *container.Container) {
 	api := app.Group("/api")
 
 	// Initialize route handlers
-	UserRoutes(api, svc)
-	FolderRoutes(api, svc)
-	JobsRoutes(api, svc)
+	UserRoutes(api, serviceContainer)
+	FolderRoutes(api, serviceContainer)
+	JobsRoutes(api, serviceContainer)
 
 	// Catch-all route for undefined endpoints
 	app.Use(func(c fiber.Ctx) error {

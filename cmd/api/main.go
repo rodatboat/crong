@@ -23,13 +23,13 @@ func main() {
 	db := database.InitDb(cfg)
 
 	// Initialize dependency container (repositories, services)
-	svc := container.NewContainer(db)
+	serviceContainer := container.NewContainer(db)
 
 	// Initialize routes with container
 	app := fiber.New()
 	app.Use(cors.New())
 
-	routes.RegisterRoutes(app, svc)
+	routes.RegisterRoutes(app, serviceContainer)
 
 	// Start the server
 	log.Printf("Server starting on port %s", cfg.Port)

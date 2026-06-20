@@ -7,6 +7,7 @@ import (
 	"github.com/rodatboat/crong/internal/models"
 	"github.com/rodatboat/crong/internal/response"
 	"github.com/rodatboat/crong/internal/services"
+	"github.com/rodatboat/crong/internal/utils"
 )
 
 type FolderHandler struct {
@@ -20,14 +21,19 @@ func NewFolderHandler(folderService *services.FolderService) *FolderHandler {
 }
 
 func (h *FolderHandler) CreateFolder(c fiber.Ctx) error {
-	newFolder := new(models.Folder)
-	if err := c.Bind().Body(newFolder); err != nil {
-		return err
+	var req models.FolderCreate
+	if err := c.Bind().Body(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
+	}
+
+	// Validate request
+	if err := utils.ValidateStruct(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	// TODO: Call repository to create folder in database
 
-	return response.Success(c, newFolder)
+	return response.Success(c, &req)
 }
 
 func (h *FolderHandler) ReadFolders(c fiber.Ctx) error {
@@ -40,10 +46,19 @@ func (h *FolderHandler) ReadFolders(c fiber.Ctx) error {
 }
 
 func (h *FolderHandler) UpdateFolder(c fiber.Ctx) error {
-
 	folderId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return response.Error(c, fiber.StatusBadRequest, "Invalid folder ID")
+	}
+
+	var req models.FolderUpdate
+	if err := c.Bind().Body(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
+	}
+
+	// Validate request
+	if err := utils.ValidateStruct(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	// TODO: Call repository to update folder in database
