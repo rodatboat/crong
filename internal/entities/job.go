@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"gorm.io/datatypes"
-	"gorm.io/gorm"
 )
 
 type ReqMethod int
@@ -27,7 +26,6 @@ func (Job) TableName() string {
 }
 
 type Job struct {
-	gorm.Model
 	Title    string    `gorm:"column:title;not null"`
 	Url      string    `gorm:"column:url;not null"`
 	FolderID uint      `gorm:"column:folder_id"`
@@ -50,8 +48,6 @@ func (JobExecution) TableName() string {
 }
 
 type JobExecution struct {
-	gorm.Model
-
 	JobID uint `gorm:"index;not null"`
 
 	Success         bool   `gorm:"column:success"`
