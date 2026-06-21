@@ -30,8 +30,8 @@ func (h *JobHandler) CreateJob(c fiber.Ctx) error {
 	if err := utils.ValidateStruct(&req); err != nil {
 		return response.Error(c, fiber.StatusBadRequest, err.Error())
 	}
-
-	// TODO: Get user from context (from auth middleware)
+	// TODO: Validate job request (method is valid)
+	// TODO: Get user from context (from auth middleware) & validate folder ID
 	// userID := c.Locals("user_id").(uint)
 
 	// Call service layer

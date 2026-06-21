@@ -41,7 +41,9 @@ CREATE TABLE jobs (
     enabled BOOLEAN DEFAULT TRUE,
 
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    updated_at TIMESTAMP DEFAULT NOW(),
+
+    -- FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Minute(s) the job runs

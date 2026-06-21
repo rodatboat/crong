@@ -34,7 +34,6 @@ func (s *JobService) GetJobsByUser(userID uint) ([]*models.Job, error) {
 }
 
 func (s *JobService) CreateJob(userID uint, req *models.JobCreateRequest) (*models.Job, error) {
-	// TODO: Validate job request
 	// TODO: Convert cron expression to schedule
 	// TODO: Create job in repository
 	return nil, nil

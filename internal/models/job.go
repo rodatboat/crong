@@ -29,10 +29,10 @@ type Job struct {
 
 type JobCreateRequest struct {
 	Title    string `json:"title" validate:"required"`
-	Url      string `json:"url" validate:"required url"`
+	Url      string `json:"url" validate:"required,url"`
 	FolderID uint   `json:"folder_id"`
 
-	Method  entities.ReqMethod `json:"method" validate:"required"`
+	Method  entities.ReqMethod `json:"method"`
 	Headers []JobHeaders       `json:"headers"`
 	Auth    JobAuth            `json:"auth"`
 	Body    string             `json:"body"`
@@ -48,7 +48,7 @@ type JobUpdateRequest struct {
 }
 
 type JobAuth struct {
-	Enabled  bool   `json:"enabled" validate:"required"`
+	Enabled  bool   `json:"enabled"`
 	Username string `json:"username" validate:"required_if=Enabled true"`
 	Password string `json:"password" validate:"required_if=Enabled true"`
 }
