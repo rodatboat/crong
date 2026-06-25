@@ -6,11 +6,15 @@ import (
 )
 
 type JobRepository struct {
-	db *gorm.DB
+	db           *gorm.DB
+	scheduleRepo *ScheduleRepository
 }
 
-func NewJobRepository(db *gorm.DB) *JobRepository {
-	return &JobRepository{db: db}
+func NewJobRepository(db *gorm.DB, scheduleRepo *ScheduleRepository) *JobRepository {
+	return &JobRepository{
+		db:           db,
+		scheduleRepo: scheduleRepo,
+	}
 }
 
 func (r *JobRepository) FindByUser(userID uint) ([]*entities.Job, error) {
@@ -20,4 +24,23 @@ func (r *JobRepository) FindByUser(userID uint) ([]*entities.Job, error) {
 	}
 
 	return jobs, nil
+}
+
+// WithTransaction runs a callback function within a database transaction
+// This allows services to orchestrate multiple repository operations atomically
+func (r *JobRepository) WithTransaction(fn func(*gorm.DB) error) error {
+	return r.db.Transaction(fn)
+}
+
+// Create saves a single job without schedule
+func (r *JobRepository) Create(tx *gorm.DB, job *entities.Job) error {
+	return tx.Create(job).Error
+}
+
+func (r *JobRepository) Update(job *entities.Job) error {
+	return r.db.Save(job).Error
+}
+
+func (r *JobRepository) Delete(jobID uint) error {
+	return r.db.Delete(&entities.Job{}, jobID).Error
 }

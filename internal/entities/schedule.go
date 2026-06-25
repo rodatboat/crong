@@ -44,3 +44,13 @@ type ScheduleMonth struct {
 func (ScheduleMonth) TableName() string {
 	return "schedule_month"
 }
+
+type Schedule struct {
+	JobID uint
+
+	Minute []ScheduleMinute
+	Hour   []ScheduleHour
+	Mday   []ScheduleMday
+	Wday   []ScheduleWday
+	Month  []ScheduleMonth
+}

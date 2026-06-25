@@ -26,6 +26,7 @@ func (Job) TableName() string {
 }
 
 type Job struct {
+	ID       uint      `gorm:"column:id;primaryKey"`
 	Title    string    `gorm:"column:title;not null"`
 	Url      string    `gorm:"column:url;not null"`
 	FolderID uint      `gorm:"column:folder_id"`
