@@ -36,7 +36,7 @@ type JobCreateRequest struct {
 	Headers []JobHeaders       `json:"headers"`
 	Auth    JobAuth            `json:"auth"`
 	Body    string             `json:"body"`
-	Cron    string             `json:"cron" validate:"required,min=9"`
+	Cron    string             `json:"cron" validate:"required,validcron"`
 
 	Timezone string `json:"timezone"`
 	Timeout  int    `json:"timeout" validate:"required,max=30"`

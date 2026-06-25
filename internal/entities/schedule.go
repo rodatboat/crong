@@ -51,6 +51,6 @@ type Schedule struct {
 	Minute []ScheduleMinute
 	Hour   []ScheduleHour
 	Mday   []ScheduleMday
-	Wday   []ScheduleWday
 	Month  []ScheduleMonth
+	Wday   []ScheduleWday
 }
