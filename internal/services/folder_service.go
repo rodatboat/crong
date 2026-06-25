@@ -14,4 +14,18 @@ func NewFolderService(folderRepo *repositories.FolderRepository) *FolderService 
 	}
 }
 
+func (f *FolderService) FolderExists(folderID uint, userID uint) bool {
+	// TODO: Add userID to check
+	folder, err := f.folderRepo.FindByFolder(folderID)
+	if err != nil {
+		return false
+	}
+
+	if folder != nil {
+		return true
+	}
+
+	return false
+}
+
 // TODO: Add folder service methods

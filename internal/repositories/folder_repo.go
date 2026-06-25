@@ -22,6 +22,15 @@ func (r *FolderRepository) FindByUser(userID uint) ([]*entities.Folder, error) {
 	return folders, nil
 }
 
+func (r *FolderRepository) FindByFolder(folderID uint) (*entities.Folder, error) {
+	var folder *entities.Folder
+	if err := r.db.Where("id = ?", folderID).Find(&folder).Error; err != nil {
+		return nil, err
+	}
+
+	return folder, nil
+}
+
 func (r *FolderRepository) Create(name string, userID uint) (*entities.Folder, error) {
 	folder := &entities.Folder{
 		Name:   name,

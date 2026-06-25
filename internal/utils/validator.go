@@ -6,13 +6,14 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/rodatboat/crong/internal/entities"
 )
 
 var validate *validator.Validate
 
 func init() {
 	validate = validator.New()
-	
+
 	// Use JSON field names in error messages instead of struct field names
 	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
 		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
@@ -20,6 +21,12 @@ func init() {
 			return ""
 		}
 		return name
+	})
+
+	// Register custom validator for HTTP methods (0-8: GET through CONNECT)
+	validate.RegisterValidation("validmethod", func(fl validator.FieldLevel) bool {
+		method := fl.Field().Interface().(entities.ReqMethod)
+		return method >= 0 && method <= 8
 	})
 }
 
@@ -53,6 +60,8 @@ func formatFieldError(fieldErr validator.FieldError) string {
 	switch tag {
 	case "required":
 		return fmt.Sprintf("%s is required", field)
+	case "validmethod":
+		return fmt.Sprintf("%s must be a valid HTTP method", field)
 	case "required_if":
 		return fmt.Sprintf("%s is required when %s", field, fieldErr.Param())
 	case "url":

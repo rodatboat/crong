@@ -32,7 +32,7 @@ type JobCreateRequest struct {
 	Url      string `json:"url" validate:"required,url"`
 	FolderID uint   `json:"folder_id"`
 
-	Method  entities.ReqMethod `json:"method"`
+	Method  entities.ReqMethod `json:"method" validate:"validmethod"`
 	Headers []JobHeaders       `json:"headers"`
 	Auth    JobAuth            `json:"auth"`
 	Body    string             `json:"body"`

@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+
 	"github.com/rodatboat/crong/internal/models"
 	"github.com/rodatboat/crong/internal/repositories"
 )
@@ -13,12 +15,14 @@ import (
  * - Handling any complex logic related to job schedule syncing based on cron expression
  */
 type JobService struct {
-	jobRepo *repositories.JobRepository
+	jobRepo       *repositories.JobRepository
+	folderService *FolderService
 }
 
-func NewJobService(jobRepo *repositories.JobRepository) *JobService {
+func NewJobService(jobRepo *repositories.JobRepository, folderService *FolderService) *JobService {
 	return &JobService{
-		jobRepo: jobRepo,
+		jobRepo:       jobRepo,
+		folderService: folderService,
 	}
 }
 
@@ -34,7 +38,16 @@ func (s *JobService) GetJobsByUser(userID uint) ([]*models.Job, error) {
 }
 
 func (s *JobService) CreateJob(userID uint, req *models.JobCreateRequest) (*models.Job, error) {
+
 	// TODO: Convert cron expression to schedule
+
+	// Validate folder exists if provided
+	if req.FolderID > 0 {
+		if !s.folderService.FolderExists(req.FolderID, userID) {
+			return nil, fmt.Errorf("Folder not found")
+		}
+	}
+
 	// TODO: Create job in repository
 	return nil, nil
 }
