@@ -22,9 +22,9 @@ func (r *FolderRepository) FindByUser(userID uint) ([]*entities.Folder, error) {
 	return folders, nil
 }
 
-func (r *FolderRepository) FindByFolder(folderID uint) (*entities.Folder, error) {
+func (r *FolderRepository) FindByFolderIDAndUserID(folderID uint, userID uint) (*entities.Folder, error) {
 	var folder *entities.Folder
-	if err := r.db.Where("id = ?", folderID).Find(&folder).Error; err != nil {
+	if err := r.db.Where("id = ? AND user_id = ?", folderID, userID).Find(&folder).Error; err != nil {
 		return nil, err
 	}
 

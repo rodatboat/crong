@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/gofiber/fiber/v3/log"
 	"github.com/rodatboat/crong/internal/entities"
 )
 
@@ -38,25 +39,26 @@ func init() {
 }
 
 // ValidateStruct validates a struct and returns a user-friendly error message
-func ValidateStruct(s interface{}) error {
+func ValidateStruct(s interface{}) (map[string]string, error) {
 	err := validate.Struct(s)
 	if err == nil {
-		return nil
+		return nil, nil
 	}
 
 	// Type assert to validator.ValidationErrors
 	validationErrors, ok := err.(validator.ValidationErrors)
 	if !ok {
-		return fmt.Errorf("validation failed: %v", err)
+		return nil, err
 	}
 
 	// Build user-friendly error messages
-	var errMsgs []string
+	errMsgs := make(map[string]string)
 	for _, fieldErr := range validationErrors {
-		errMsgs = append(errMsgs, formatFieldError(fieldErr))
+		log.Errorf("Validation error: %v", fieldErr)
+		errMsgs[fieldErr.Field()] = formatFieldError(fieldErr)
 	}
 
-	return fmt.Errorf("%s", strings.Join(errMsgs, "; "))
+	return errMsgs, err
 }
 
 // formatFieldError formats a single field error into a readable message

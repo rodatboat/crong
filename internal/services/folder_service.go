@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/gofiber/fiber/v3/log"
 	"github.com/rodatboat/crong/internal/repositories"
 )
 
@@ -15,8 +16,8 @@ func NewFolderService(folderRepo *repositories.FolderRepository) *FolderService 
 }
 
 func (f *FolderService) FolderExists(folderID uint, userID uint) bool {
-	// TODO: Add userID to check
-	folder, err := f.folderRepo.FindByFolder(folderID)
+	log.Infof("Fetching folder with id %v for user %v", folderID, userID)
+	folder, err := f.folderRepo.FindByFolderIDAndUserID(folderID, userID)
 	if err != nil {
 		return false
 	}

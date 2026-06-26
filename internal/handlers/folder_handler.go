@@ -5,7 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/rodatboat/crong/internal/models"
-	"github.com/rodatboat/crong/internal/response"
+	"github.com/rodatboat/crong/internal/resp"
 	"github.com/rodatboat/crong/internal/services"
 	"github.com/rodatboat/crong/internal/utils"
 )
@@ -23,17 +23,20 @@ func NewFolderHandler(folderService *services.FolderService) *FolderHandler {
 func (h *FolderHandler) CreateFolder(c fiber.Ctx) error {
 	var req models.FolderCreate
 	if err := c.Bind().Body(&req); err != nil {
-		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
+		return resp.Send(c, resp.BadRequest())
 	}
 
 	// Validate request
-	if err := utils.ValidateStruct(&req); err != nil {
-		return response.Error(c, fiber.StatusBadRequest, err.Error())
+	if validationErrors, err := utils.ValidateStruct(&req); err != nil {
+		if validationErrors == nil {
+			return resp.Send(c, resp.InternalServerError())
+		}
+		return resp.Send(c, resp.ValidationError(validationErrors))
 	}
 
 	// TODO: Call repository to create folder in database
 
-	return response.Success(c, &req)
+	return resp.Send(c, resp.Success(req))
 }
 
 func (h *FolderHandler) ReadFolders(c fiber.Ctx) error {
@@ -42,23 +45,26 @@ func (h *FolderHandler) ReadFolders(c fiber.Ctx) error {
 
 	folders := []models.Folder{}
 
-	return response.Success(c, folders)
+	return resp.Send(c, resp.Success(folders))
 }
 
 func (h *FolderHandler) UpdateFolder(c fiber.Ctx) error {
 	folderId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return response.Error(c, fiber.StatusBadRequest, "Invalid folder ID")
+		return resp.Send(c, resp.BadRequest())
 	}
 
 	var req models.FolderUpdate
 	if err := c.Bind().Body(&req); err != nil {
-		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
+		return resp.Send(c, resp.BadRequest())
 	}
 
 	// Validate request
-	if err := utils.ValidateStruct(&req); err != nil {
-		return response.Error(c, fiber.StatusBadRequest, err.Error())
+	if validationErrors, err := utils.ValidateStruct(&req); err != nil {
+		if validationErrors == nil {
+			return resp.Send(c, resp.InternalServerError())
+		}
+		return resp.Send(c, resp.ValidationError(validationErrors))
 	}
 
 	// TODO: Call repository to update folder in database
@@ -67,16 +73,16 @@ func (h *FolderHandler) UpdateFolder(c fiber.Ctx) error {
 		ID: uint(folderId),
 	}
 
-	return response.Success(c, &folder)
+	return resp.Send(c, resp.Success(folder))
 }
 
 func (h *FolderHandler) DeleteFolder(c fiber.Ctx) error {
 	_, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return response.Error(c, fiber.StatusBadRequest, "Invalid folder ID")
+		return resp.Send(c, resp.BadRequest())
 	}
 
 	// TODO: Call repository to delete folder from database
 
-	return response.Success(c, nil)
+	return resp.Send(c, resp.Success(nil))
 }

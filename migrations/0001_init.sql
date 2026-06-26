@@ -98,7 +98,7 @@ CREATE TABLE job_executions (
     response_body TEXT,
     error TEXT,
 
-    executed_at TIMESTAMP DEFAULT NOW(),
+    executed_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     

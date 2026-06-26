@@ -26,6 +26,15 @@ func (r *JobRepository) FindByUser(userID uint) ([]*entities.Job, error) {
 	return jobs, nil
 }
 
+func (r *JobRepository) FindByJobID(jobID uint, userID uint) (*entities.Job, error) {
+	var job *entities.Job
+	if err := r.db.Where("id = ? AND user_id = ?", jobID, userID).Find(&job).Error; err != nil {
+		return nil, err
+	}
+
+	return job, nil
+}
+
 // WithTransaction runs a callback function within a database transaction
 // This allows services to orchestrate multiple repository operations atomically
 func (r *JobRepository) WithTransaction(fn func(*gorm.DB) error) error {

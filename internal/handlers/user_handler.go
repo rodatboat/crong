@@ -3,7 +3,7 @@ package handlers
 import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/rodatboat/crong/internal/models"
-	"github.com/rodatboat/crong/internal/response"
+	"github.com/rodatboat/crong/internal/resp"
 	"github.com/rodatboat/crong/internal/services"
 )
 
@@ -25,7 +25,7 @@ func (h *UserHandler) LoginUser(c fiber.Ctx) error {
 
 	// TODO: Call repository to create job in database
 
-	return response.Success(c, newJob)
+	return resp.Send(c, resp.Success(newJob))
 }
 
 func (h *UserHandler) RegisterUser(c fiber.Ctx) error {
@@ -36,5 +36,5 @@ func (h *UserHandler) RegisterUser(c fiber.Ctx) error {
 
 	// TODO: Call repository to create user in database
 
-	return response.Success(c, newUser)
+	return resp.Send(c, resp.Success(newUser))
 }

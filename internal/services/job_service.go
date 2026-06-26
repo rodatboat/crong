@@ -41,20 +41,35 @@ func NewJobService(
 }
 
 func (s *JobService) GetJobsByUser(userID uint) ([]*models.Job, error) {
+	log.Infof("Getting jobs for user: %v", userID)
 	// Call repository layer
-	_, err := s.jobRepo.FindByUser(userID)
+	jobEntities, err := s.jobRepo.FindByUser(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: Convert entities to models and apply business logic
-	return nil, nil
+	jobs := make([]*models.Job, len(jobEntities))
+	for _, jobEntity := range jobEntities {
+		jobs = append(jobs, s.mapJobEntityToJobModel(jobEntity))
+	}
+	return jobs, nil
+}
+
+func (s *JobService) GetJobsDetailsByID(jobID uint, userID uint) (*models.Job, error) {
+	log.Infof("Getting job details: %v", jobID)
+	// Call repository layer
+	jobEntity, err := s.jobRepo.FindByJobID(jobID, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapJobEntityToJobModel(jobEntity), nil
 }
 
 func (s *JobService) CreateJob(userID uint, req *models.JobCreateRequest) (*models.Job, error) {
 	log.Infof("Creating job: %v", req)
 
-	// Validate folder exists if provided
+	// Validate user owns the folder, and that folder exists (if provided)
 	if req.FolderID > 0 {
 		if !s.folderService.FolderExists(req.FolderID, userID) {
 			log.Errorf("Folder not found: %v", req.FolderID)
@@ -95,14 +110,11 @@ func (s *JobService) CreateJob(userID uint, req *models.JobCreateRequest) (*mode
 		return nil, err
 	}
 
-	// TODO: Convert entity back to model and return
-	return nil, nil
+	return s.mapJobEntityToJobModel(jobEntity), nil
 }
 
 func (s *JobService) UpdateJob(jobID uint, userID uint, req *models.JobUpdateRequest) (*models.Job, error) {
 	log.Infof("Updating existing job: %v", req)
-
-	// TODO: Verify job belongs to user
 
 	// Validate folder exists if provided
 	if req.FolderID > 0 {
@@ -189,7 +201,7 @@ func (s *JobService) mapJobCreateRequestToEntity(userID uint, req *models.JobCre
 }
 
 /**
- * convertHeadersToJSON converts []JobHeaders to datatypes.JSON
+ * convertHeadersToJSON converts []models.JobHeaders to datatypes.JSON
  */
 func convertHeadersToJSON(headers []models.JobHeaders) datatypes.JSON {
 	if len(headers) == 0 {
@@ -200,9 +212,47 @@ func convertHeadersToJSON(headers []models.JobHeaders) datatypes.JSON {
 }
 
 /**
- * convertAuthToJSON converts JobAuth to datatypes.JSON
+ * convertAuthToJSON converts models.JobAuth to datatypes.JSON
  */
 func convertAuthToJSON(auth models.JobAuth) datatypes.JSON {
 	data, _ := json.Marshal(auth)
 	return datatypes.JSON(data)
+}
+
+func (s *JobService) mapJobEntityToJobModel(jobEntity *entities.Job) *models.Job {
+	return &models.Job{
+		ID:            jobEntity.ID,
+		Title:         jobEntity.Title,
+		Url:           jobEntity.Url,
+		FolderID:      jobEntity.FolderID,
+		Method:        jobEntity.Method,
+		Headers:       convertHeadersJSONToHeadersModel(jobEntity.Headers),
+		Auth:          convertAuthJSONToAuthModel(jobEntity.Auth),
+		Body:          jobEntity.Body,
+		Cron:          jobEntity.Cron,
+		Timezone:      jobEntity.Timezone,
+		Timeout:       jobEntity.Timeout,
+		Enabled:       jobEntity.Enabled,
+		LastExecution: jobEntity.LastExecution,
+		CreatedAt:     jobEntity.CreatedAt,
+		UpdatedAt:     jobEntity.UpdatedAt,
+	}
+}
+
+/**
+ * convertAuthJSONToAuthModel converts datatypes.JSON to models.JobAuth
+ */
+func convertAuthJSONToAuthModel(authJSON datatypes.JSON) models.JobAuth {
+	var auth models.JobAuth
+	json.Unmarshal([]byte(authJSON), &auth)
+	return auth
+}
+
+/**
+ * convertHeadersToJSON converts datatypes.JSON to []models.JobHeaders
+ */
+func convertHeadersJSONToHeadersModel(headersJSON datatypes.JSON) []models.JobHeaders {
+	var headers []models.JobHeaders
+	json.Unmarshal([]byte(headersJSON), &headers)
+	return headers
 }

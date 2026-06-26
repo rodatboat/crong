@@ -4,8 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/rodatboat/crong/internal/middleware"
 	"github.com/rodatboat/crong/internal/models"
-	"github.com/rodatboat/crong/internal/response"
+	"github.com/rodatboat/crong/internal/resp"
 	"github.com/rodatboat/crong/internal/services"
 	"github.com/rodatboat/crong/internal/utils"
 )
@@ -23,82 +24,102 @@ func NewJobHandler(jobService *services.JobService) *JobHandler {
 func (h *JobHandler) CreateJob(c fiber.Ctx) error {
 	var req models.JobCreateRequest
 	if err := c.Bind().Body(&req); err != nil {
-		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
+		return resp.Send(c, resp.BadRequest())
 	}
 
 	// Validate request
-	if err := utils.ValidateStruct(&req); err != nil {
-		return response.Error(c, fiber.StatusBadRequest, err.Error())
+	if validationErrors, err := utils.ValidateStruct(&req); err != nil {
+		if validationErrors == nil {
+			return resp.Send(c, resp.InternalServerError())
+		}
+		return resp.Send(c, resp.ValidationError(validationErrors))
 	}
 
-	// TODO: Get user from context (from auth middleware) & validate folder ID belongs to user
-	// userID := c.Locals("user_id").(uint)
+	auth := c.Locals(middleware.AuthContextKey).(middleware.AuthContext)
 
 	// Call service layer
-	job, err := h.jobService.CreateJob(1, &req)
+	job, err := h.jobService.CreateJob(auth.UserID, &req)
 	if err != nil {
-		return response.Error(c, fiber.StatusInternalServerError, err.Error())
+		return resp.Send(c, resp.InternalServerError())
 	}
 
-	return response.Success(c, job)
+	return resp.Send(c, resp.Success(job))
 }
 
 func (h *JobHandler) ReadJobs(c fiber.Ctx) error {
-	// TODO: Get user from context
-	// userID := c.Locals("user_id").(uint)
+	auth := c.Locals(middleware.AuthContextKey).(middleware.AuthContext)
 
 	// Call service layer
-	jobs, err := h.jobService.GetJobsByUser(1)
+	jobs, err := h.jobService.GetJobsByUser(auth.UserID)
 	if err != nil {
-		return response.Error(c, fiber.StatusInternalServerError, err.Error())
+		return resp.Send(c, resp.InternalServerError())
 	}
 
-	return response.Success(c, jobs)
+	return resp.Send(c, resp.Success(jobs))
+}
+
+func (h *JobHandler) GetJobsDetailsByID(c fiber.Ctx) error {
+	auth := c.Locals(middleware.AuthContextKey).(middleware.AuthContext)
+
+	folderIDStr := c.Params("id")
+	folderID, err := strconv.ParseUint(folderIDStr, 10, 32)
+	if err != nil || folderID == 0 {
+		return resp.Send(c, resp.BadRequest())
+	}
+
+	// Call service layer
+	jobs, err := h.jobService.GetJobsDetailsByID(uint(folderID), auth.UserID)
+	if err != nil {
+		return resp.Send(c, resp.InternalServerError())
+	}
+
+	return resp.Send(c, resp.Success(jobs))
 }
 
 func (h *JobHandler) UpdateJob(c fiber.Ctx) error {
 	jobIDStr := c.Params("id")
 	jobID, err := strconv.ParseUint(jobIDStr, 10, 32)
 	if err != nil {
-		return response.Error(c, fiber.StatusBadRequest, "Invalid job ID")
+		return resp.Send(c, resp.BadRequest())
 	}
 
-	// TODO: Get user from context
-	// userID := c.Locals("user_id").(uint)
+	auth := c.Locals(middleware.AuthContextKey).(middleware.AuthContext)
 
 	var req models.JobUpdateRequest
 	if err := c.Bind().Body(&req); err != nil {
-		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
+		return resp.Send(c, resp.BadRequest())
 	}
 
 	// Validate request
-	if err := utils.ValidateStruct(&req); err != nil {
-		return response.Error(c, fiber.StatusBadRequest, err.Error())
+	if validationErrors, err := utils.ValidateStruct(&req); err != nil {
+		if validationErrors == nil {
+			return resp.Send(c, resp.InternalServerError())
+		}
+		return resp.Send(c, resp.ValidationError(validationErrors))
 	}
 
 	// Call service layer
-	job, err := h.jobService.UpdateJob(uint(jobID), 1, &req)
+	job, err := h.jobService.UpdateJob(uint(jobID), auth.UserID, &req)
 	if err != nil {
-		return response.Error(c, fiber.StatusInternalServerError, err.Error())
+		return resp.Send(c, resp.InternalServerError())
 	}
 
-	return response.Success(c, job)
+	return resp.Send(c, resp.Success(job))
 }
 
 func (h *JobHandler) DeleteJob(c fiber.Ctx) error {
 	jobIDStr := c.Params("id")
 	jobID, err := strconv.ParseUint(jobIDStr, 10, 32)
 	if err != nil {
-		return response.Error(c, fiber.StatusBadRequest, "Invalid job ID")
+		return resp.Send(c, resp.BadRequest())
 	}
 
-	// TODO: Get user from context
-	// userID := c.Locals("user_id").(uint)
+	auth := c.Locals(middleware.AuthContextKey).(middleware.AuthContext)
 
-	err = h.jobService.DeleteJob(uint(jobID), 1)
+	err = h.jobService.DeleteJob(uint(jobID), auth.UserID)
 	if err != nil {
-		return response.Error(c, fiber.StatusInternalServerError, err.Error())
+		return resp.Send(c, resp.InternalServerError())
 	}
 
-	return response.Success(c, nil)
+	return resp.Send(c, resp.Success(nil))
 }

@@ -42,6 +42,10 @@ type Job struct {
 
 	Timeout int  `gorm:"column:timeout;default:30"`
 	Enabled bool `gorm:"column:enabled;not null;default:true"`
+
+	LastExecution time.Time `gorm:"column:last_execution"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:now()"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:now()"`
 }
 
 func (JobExecution) TableName() string {

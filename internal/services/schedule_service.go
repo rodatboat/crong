@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gofiber/fiber/v3/log"
 	"github.com/rodatboat/crong/internal/entities"
 	"github.com/rodatboat/crong/internal/models"
 )
@@ -37,6 +38,7 @@ func NewScheduleService() *ScheduleService {
 //   - "0 9,17 * * 1-5" = 9 AM and 5 PM on weekdays only
 func (s *ScheduleService) CronExpressionToSchedule(cronExpr string) (*models.Schedule, error) {
 	// Split cron expression into fields. (e.g. "0 */3 * * *" -> ["0", "*/3", "*", "*", "*"])
+	log.Infof("Parsing cron expression: %v", cronExpr)
 	parts := strings.Fields(strings.TrimSpace(cronExpr))
 	if len(parts) != 5 {
 		return nil, fmt.Errorf("invalid cron expression: expected 5 fields, got %d", len(parts))
@@ -67,13 +69,16 @@ func (s *ScheduleService) CronExpressionToSchedule(cronExpr string) (*models.Sch
 		return nil, err
 	}
 
-	return &models.Schedule{
+	schedule := &models.Schedule{
 		Minute: minute,
 		Hour:   hour,
 		Mday:   mday,
 		Month:  month,
 		Wday:   wday,
-	}, nil
+	}
+
+	log.Infof("Parsed schedule: %+v", schedule)
+	return schedule, nil
 }
 
 // parseField parses a single cron field and returns a slice of values
