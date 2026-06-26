@@ -27,12 +27,12 @@ func (r *JobRepository) FindByUser(userID uint) ([]*entities.Job, error) {
 }
 
 func (r *JobRepository) FindByJobID(jobID uint, userID uint) (*entities.Job, error) {
-	var job *entities.Job
-	if err := r.db.Where("id = ? AND user_id = ?", jobID, userID).Find(&job).Error; err != nil {
+	var job entities.Job
+	if err := r.db.Where("id = ? AND user_id = ?", jobID, userID).First(&job).Error; err != nil {
 		return nil, err
 	}
 
-	return job, nil
+	return &job, nil
 }
 
 // WithTransaction runs a callback function within a database transaction

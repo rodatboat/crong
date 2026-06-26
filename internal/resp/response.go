@@ -45,6 +45,13 @@ func InternalServerError() APIResponse {
 	}
 }
 
+func NotFound() APIResponse {
+	return APIResponse{
+		Status:  fiber.StatusNotFound,
+		Message: ErrNotFound.Error(),
+	}
+}
+
 func Response(status int, message string, data any) APIResponse {
 	return APIResponse{
 		Status:  status,

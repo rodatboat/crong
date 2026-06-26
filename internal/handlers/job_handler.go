@@ -70,7 +70,7 @@ func (h *JobHandler) GetJobsDetailsByID(c fiber.Ctx) error {
 	// Call service layer
 	jobs, err := h.jobService.GetJobsDetailsByID(uint(folderID), auth.UserID)
 	if err != nil {
-		return resp.Send(c, resp.InternalServerError())
+		return resp.HandleError(c, err)
 	}
 
 	return resp.Send(c, resp.Success(jobs))
@@ -92,13 +92,10 @@ func (h *JobHandler) UpdateJob(c fiber.Ctx) error {
 
 	// Validate request
 	if validationErrors, err := utils.ValidateStruct(&req); err != nil {
-		if validationErrors == nil {
-			return resp.Send(c, resp.InternalServerError())
-		}
-		return resp.Send(c, resp.ValidationError(validationErrors))
+		return resp.HandleValidationError(c, err, validationErrors)
 	}
 
-	// Call service layer
+	// Update job details
 	job, err := h.jobService.UpdateJob(uint(jobID), auth.UserID, &req)
 	if err != nil {
 		return resp.Send(c, resp.InternalServerError())
@@ -118,7 +115,7 @@ func (h *JobHandler) DeleteJob(c fiber.Ctx) error {
 
 	err = h.jobService.DeleteJob(uint(jobID), auth.UserID)
 	if err != nil {
-		return resp.Send(c, resp.InternalServerError())
+		return resp.HandleError(c, err)
 	}
 
 	return resp.Send(c, resp.Success(nil))

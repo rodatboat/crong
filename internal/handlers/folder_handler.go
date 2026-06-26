@@ -28,10 +28,7 @@ func (h *FolderHandler) CreateFolder(c fiber.Ctx) error {
 
 	// Validate request
 	if validationErrors, err := utils.ValidateStruct(&req); err != nil {
-		if validationErrors == nil {
-			return resp.Send(c, resp.InternalServerError())
-		}
-		return resp.Send(c, resp.ValidationError(validationErrors))
+		return resp.HandleValidationError(c, err, validationErrors)
 	}
 
 	// TODO: Call repository to create folder in database
@@ -61,10 +58,7 @@ func (h *FolderHandler) UpdateFolder(c fiber.Ctx) error {
 
 	// Validate request
 	if validationErrors, err := utils.ValidateStruct(&req); err != nil {
-		if validationErrors == nil {
-			return resp.Send(c, resp.InternalServerError())
-		}
-		return resp.Send(c, resp.ValidationError(validationErrors))
+		return resp.HandleValidationError(c, err, validationErrors)
 	}
 
 	// TODO: Call repository to update folder in database

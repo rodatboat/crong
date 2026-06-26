@@ -2,12 +2,14 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/rodatboat/crong/internal/entities"
 	"github.com/rodatboat/crong/internal/models"
 	"github.com/rodatboat/crong/internal/repositories"
+	"github.com/rodatboat/crong/internal/resp"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -60,6 +62,9 @@ func (s *JobService) GetJobsDetailsByID(jobID uint, userID uint) (*models.Job, e
 	// Call repository layer
 	jobEntity, err := s.jobRepo.FindByJobID(jobID, userID)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, resp.ErrNotFound
+		}
 		return nil, err
 	}
 
