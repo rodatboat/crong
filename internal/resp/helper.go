@@ -16,6 +16,14 @@ func HandleError(ctx fiber.Ctx, err error) error {
 	var response APIResponse
 	if errors.Is(err, ErrNotFound) {
 		response = NotFound()
+	} else if errors.Is(err, ErrBadRequest) || errors.Is(err, ErrInvalidCron) {
+		response = BadRequest()
+	} else if errors.Is(err, ErrInternalServerError) {
+		response = InternalServerError()
+	} else if errors.Is(err, ErrUnauthorized) {
+		response = Unauthorized()
+	} else if errors.Is(err, ErrValidation) {
+		response = ValidationError(nil)
 	} else {
 		response = InternalServerError()
 	}

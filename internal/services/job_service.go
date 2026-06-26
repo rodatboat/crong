@@ -3,7 +3,6 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/rodatboat/crong/internal/entities"
@@ -43,9 +42,9 @@ func NewJobService(
 }
 
 func (s *JobService) GetJobsByUser(userID uint) ([]*models.Job, error) {
-	log.Infof("Getting jobs for user: %v", userID)
-	// Call repository layer
-	jobEntities, err := s.jobRepo.FindByUser(userID)
+	log.Infof("Listing jobs for user %v", userID)
+
+	jobEntities, err := s.jobRepo.ListByUser(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -58,8 +57,8 @@ func (s *JobService) GetJobsByUser(userID uint) ([]*models.Job, error) {
 }
 
 func (s *JobService) GetJobsDetailsByID(jobID uint, userID uint) (*models.Job, error) {
-	log.Infof("Getting job details: %v", jobID)
-	// Call repository layer
+	log.Infof("Getting job details for job %v", jobID)
+
 	jobEntity, err := s.jobRepo.FindByJobID(jobID, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -72,13 +71,15 @@ func (s *JobService) GetJobsDetailsByID(jobID uint, userID uint) (*models.Job, e
 }
 
 func (s *JobService) CreateJob(userID uint, req *models.JobCreateRequest) (*models.Job, error) {
-	log.Infof("Creating job: %v", req)
+	log.Infof("Creating job for user %v with payload %+v", userID, req)
 
 	// Validate user owns the folder, and that folder exists (if provided)
 	if req.FolderID > 0 {
-		if !s.folderService.FolderExists(req.FolderID, userID) {
-			log.Errorf("Folder not found: %v", req.FolderID)
-			return nil, fmt.Errorf("Folder not found")
+		if found, err := s.folderService.FolderExists(req.FolderID, userID); found == false {
+			if err != nil {
+				return nil, err
+			}
+			return nil, resp.ErrNotFound
 		}
 	}
 
@@ -86,7 +87,7 @@ func (s *JobService) CreateJob(userID uint, req *models.JobCreateRequest) (*mode
 	scheduleModel, err := s.scheduleService.CronExpressionToSchedule(req.Cron)
 	if err != nil {
 		log.Errorf("Error parsing cron expression: %v", err)
-		return nil, err
+		return nil, resp.ErrInvalidCron
 	}
 
 	// Map request to job entity
@@ -104,7 +105,7 @@ func (s *JobService) CreateJob(userID uint, req *models.JobCreateRequest) (*mode
 
 		// Create all schedule entries in the same transaction
 		if err := s.scheduleRepo.CreateSchedules(tx, scheduleEntity); err != nil {
-			return fmt.Errorf("Failed to create job schedule: %v", err)
+			return err
 		}
 
 		return nil
@@ -119,39 +120,65 @@ func (s *JobService) CreateJob(userID uint, req *models.JobCreateRequest) (*mode
 }
 
 func (s *JobService) UpdateJob(jobID uint, userID uint, req *models.JobUpdateRequest) (*models.Job, error) {
-	log.Infof("Updating existing job: %v", req)
+	log.Infof("Updating existing job %v for user %v with payload %+v", jobID, userID, req)
 
 	// Validate folder exists if provided
 	if req.FolderID > 0 {
-		if !s.folderService.FolderExists(req.FolderID, userID) {
-			log.Errorf("Folder not found: %v", req.FolderID)
-			return nil, fmt.Errorf("Folder not found")
+		if found, err := s.folderService.FolderExists(req.FolderID, userID); found == false {
+			if err != nil {
+				return nil, err
+			}
+			return nil, resp.ErrNotFound
 		}
 	}
 
 	// Delete old schedules and create new ones atomically
+	var jobEntity *entities.Job
 	err := s.jobRepo.WithTransaction(func(tx *gorm.DB) error {
-		// TODO: Update job entity
+		var err error
 
-		// TODO: Update schedule tables if cron changed. If job.cron == req.cron, do nothing
-
-		// Parse cron expression to schedule model
-		scheduleModel, err := s.scheduleService.CronExpressionToSchedule(req.Cron)
+		jobEntity, err = s.jobRepo.FindByJobID(jobID, userID)
 		if err != nil {
-			log.Errorf("Error parsing cron expression: %v", err)
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return resp.ErrNotFound
+			}
 			return err
 		}
 
-		// Delete existing schedules
-		if err := s.scheduleRepo.DeleteSchedulesByJobID(tx, jobID); err != nil {
+		jobEntity.FolderID = req.FolderID
+		jobEntity.Title = req.Title
+		jobEntity.Url = req.Url
+		jobEntity.Method = req.Method
+		jobEntity.Headers = convertHeadersToJSON(req.Headers)
+		jobEntity.Auth = convertAuthToJSON(req.Auth)
+		jobEntity.Body = req.Body
+		jobEntity.Cron = req.Cron
+		jobEntity.Timezone = req.Timezone
+		jobEntity.Timeout = req.Timeout
+		jobEntity.Enabled = req.Enabled
+
+		if err := s.jobRepo.Update(tx, jobEntity); err != nil {
 			return err
 		}
 
-		// Create new schedules
-		scheduleEntity := s.scheduleService.ScheduleModelToEntity(jobID, scheduleModel)
-		if err := s.scheduleRepo.CreateSchedules(tx, scheduleEntity); err != nil {
-			log.Errorf("Failed to updating job schedule: %v", err)
-			return err
+		if jobEntity.Cron != req.Cron {
+			// Parse cron expression to schedule model
+			scheduleModel, err := s.scheduleService.CronExpressionToSchedule(req.Cron)
+			if err != nil {
+				log.Errorf("Error parsing cron expression: %v", err)
+				return resp.ErrInvalidCron
+			}
+
+			// Delete existing schedules
+			if err := s.scheduleRepo.DeleteSchedulesByJobID(tx, jobID); err != nil {
+				return err
+			}
+
+			// Create new schedules
+			scheduleEntity := s.scheduleService.ScheduleModelToEntity(jobID, scheduleModel)
+			if err := s.scheduleRepo.CreateSchedules(tx, scheduleEntity); err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -162,15 +189,22 @@ func (s *JobService) UpdateJob(jobID uint, userID uint, req *models.JobUpdateReq
 		return nil, err
 	}
 
-	// TODO: Convert entity back to model and return
-	return nil, nil
+	return s.mapJobEntityToJobModel(jobEntity), nil
 }
 
 func (s *JobService) DeleteJob(jobID uint, userID uint) error {
-	// TODO: Verify job belongs to user
+	// Verify job belongs to current user
+	jobEntity, err := s.jobRepo.FindByJobID(jobID, userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return resp.ErrNotFound
+		}
+		return err
+	}
+
 	return s.jobRepo.WithTransaction(func(tx *gorm.DB) error {
 		// Delete job
-		if err := tx.Delete(&entities.Job{}, jobID).Error; err != nil {
+		if err := tx.Delete(jobEntity).Error; err != nil {
 			return err
 		}
 		// Delete associated schedules

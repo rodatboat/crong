@@ -8,4 +8,6 @@ var (
 	ErrInternalServerError = errors.New("Internal Server Error")
 	ErrUnauthorized        = errors.New("Unauthorized")
 	ErrValidation          = errors.New("Validation Error")
+
+	ErrInvalidCron = errors.New("Invalid Cron Expression")
 )

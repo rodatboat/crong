@@ -44,6 +44,7 @@ CREATE TABLE jobs (
     updated_at TIMESTAMP DEFAULT NOW(),
 
     -- FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    -- FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE SET NULL
 );
 
 -- Minute(s) the job runs

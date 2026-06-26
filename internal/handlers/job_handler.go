@@ -29,10 +29,7 @@ func (h *JobHandler) CreateJob(c fiber.Ctx) error {
 
 	// Validate request
 	if validationErrors, err := utils.ValidateStruct(&req); err != nil {
-		if validationErrors == nil {
-			return resp.Send(c, resp.InternalServerError())
-		}
-		return resp.Send(c, resp.ValidationError(validationErrors))
+		return resp.HandleValidationError(c, err, validationErrors)
 	}
 
 	auth := c.Locals(middleware.AuthContextKey).(middleware.AuthContext)
@@ -40,7 +37,7 @@ func (h *JobHandler) CreateJob(c fiber.Ctx) error {
 	// Call service layer
 	job, err := h.jobService.CreateJob(auth.UserID, &req)
 	if err != nil {
-		return resp.Send(c, resp.InternalServerError())
+		return resp.HandleError(c, err)
 	}
 
 	return resp.Send(c, resp.Success(job))
@@ -52,7 +49,7 @@ func (h *JobHandler) ReadJobs(c fiber.Ctx) error {
 	// Call service layer
 	jobs, err := h.jobService.GetJobsByUser(auth.UserID)
 	if err != nil {
-		return resp.Send(c, resp.InternalServerError())
+		return resp.HandleError(c, err)
 	}
 
 	return resp.Send(c, resp.Success(jobs))

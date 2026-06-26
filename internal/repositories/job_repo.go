@@ -17,7 +17,7 @@ func NewJobRepository(db *gorm.DB, scheduleRepo *ScheduleRepository) *JobReposit
 	}
 }
 
-func (r *JobRepository) FindByUser(userID uint) ([]*entities.Job, error) {
+func (r *JobRepository) ListByUser(userID uint) ([]*entities.Job, error) {
 	var jobs []*entities.Job
 	if err := r.db.Where("user_id = ?", userID).Find(&jobs).Error; err != nil {
 		return nil, err
@@ -46,8 +46,8 @@ func (r *JobRepository) Create(tx *gorm.DB, job *entities.Job) error {
 	return tx.Create(job).Error
 }
 
-func (r *JobRepository) Update(job *entities.Job) error {
-	return r.db.Save(job).Error
+func (r *JobRepository) Update(tx *gorm.DB, job *entities.Job) error {
+	return tx.Save(job).Error
 }
 
 func (r *JobRepository) Delete(jobID uint) error {
