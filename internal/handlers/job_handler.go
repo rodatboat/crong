@@ -32,7 +32,7 @@ func (h *JobHandler) CreateJob(c fiber.Ctx) error {
 		return resp.HandleValidationError(c, err, validationErrors)
 	}
 
-	auth := c.Locals(middleware.AuthContextKey).(middleware.AuthContext)
+	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
 
 	// Call service layer
 	job, err := h.jobService.CreateJob(auth.UserID, &req)
@@ -44,7 +44,7 @@ func (h *JobHandler) CreateJob(c fiber.Ctx) error {
 }
 
 func (h *JobHandler) ReadJobs(c fiber.Ctx) error {
-	auth := c.Locals(middleware.AuthContextKey).(middleware.AuthContext)
+	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
 
 	// Call service layer
 	jobs, err := h.jobService.GetJobsByUser(auth.UserID)
@@ -56,7 +56,7 @@ func (h *JobHandler) ReadJobs(c fiber.Ctx) error {
 }
 
 func (h *JobHandler) GetJobsDetailsByID(c fiber.Ctx) error {
-	auth := c.Locals(middleware.AuthContextKey).(middleware.AuthContext)
+	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
 
 	folderIDStr := c.Params("id")
 	folderID, err := strconv.ParseUint(folderIDStr, 10, 32)
@@ -80,7 +80,7 @@ func (h *JobHandler) UpdateJob(c fiber.Ctx) error {
 		return resp.Send(c, resp.BadRequest())
 	}
 
-	auth := c.Locals(middleware.AuthContextKey).(middleware.AuthContext)
+	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
 
 	var req models.JobUpdateRequest
 	if err := c.Bind().Body(&req); err != nil {
@@ -95,7 +95,7 @@ func (h *JobHandler) UpdateJob(c fiber.Ctx) error {
 	// Update job details
 	job, err := h.jobService.UpdateJob(uint(jobID), auth.UserID, &req)
 	if err != nil {
-		return resp.Send(c, resp.InternalServerError())
+		return resp.HandleError(c, err)
 	}
 
 	return resp.Send(c, resp.Success(job))
@@ -108,7 +108,7 @@ func (h *JobHandler) DeleteJob(c fiber.Ctx) error {
 		return resp.Send(c, resp.BadRequest())
 	}
 
-	auth := c.Locals(middleware.AuthContextKey).(middleware.AuthContext)
+	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
 
 	err = h.jobService.DeleteJob(uint(jobID), auth.UserID)
 	if err != nil {

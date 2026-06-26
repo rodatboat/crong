@@ -50,8 +50,8 @@ func (s *JobService) GetJobsByUser(userID uint) ([]*models.Job, error) {
 	}
 
 	jobs := make([]*models.Job, len(jobEntities))
-	for _, jobEntity := range jobEntities {
-		jobs = append(jobs, s.mapJobEntityToJobModel(jobEntity))
+	for idx, jobEntity := range jobEntities {
+		jobs[idx] = s.mapJobEntityToJobModel(jobEntity)
 	}
 	return jobs, nil
 }

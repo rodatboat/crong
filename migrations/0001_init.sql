@@ -40,11 +40,12 @@ CREATE TABLE jobs (
     timeout INT DEFAULT 30,
     enabled BOOLEAN DEFAULT TRUE,
 
+    last_execution TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 
-    -- FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    -- FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE SET NULL
+    -- FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE, -- TODO: Add ON DELETE
+    -- FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE SET NULL -- TODO: Add ON DELETE
 );
 
 -- Minute(s) the job runs
