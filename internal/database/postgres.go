@@ -1,8 +1,10 @@
 package database
 
 import (
+	"errors"
 	"log"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/rodatboat/crong/internal/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -26,4 +28,12 @@ func InitDb(cfg *config.Config) *gorm.DB {
 	// GORM is used only for querying, not schema management
 	DB = db
 	return db
+}
+
+func IsUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == "23505"
+	}
+	return false
 }

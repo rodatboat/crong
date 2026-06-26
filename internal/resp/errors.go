@@ -9,5 +9,7 @@ var (
 	ErrUnauthorized        = errors.New("Unauthorized")
 	ErrValidation          = errors.New("Validation Error")
 
-	ErrInvalidCron = errors.New("Invalid Cron Expression")
+	ErrInvalidCron        = errors.New("Invalid Cron Expression")
+	ErrUserAlreadyExists  = errors.New("User already exists")
+	ErrInvalidCredentials = errors.New("Invalid credentials")
 )
