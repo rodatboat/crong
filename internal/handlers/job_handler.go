@@ -58,14 +58,14 @@ func (h *JobHandler) ReadJobs(c fiber.Ctx) error {
 func (h *JobHandler) GetJobsDetailsByID(c fiber.Ctx) error {
 	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
 
-	folderIDStr := c.Params("id")
-	folderID, err := strconv.ParseUint(folderIDStr, 10, 32)
-	if err != nil || folderID == 0 {
+	jobIDStr := c.Params("id")
+	jobID, err := strconv.ParseUint(jobIDStr, 10, 32)
+	if err != nil || jobID == 0 {
 		return resp.Send(c, resp.BadRequest())
 	}
 
 	// Call service layer
-	jobs, err := h.jobService.GetJobsDetailsByID(uint(folderID), auth.UserID)
+	jobs, err := h.jobService.GetJobsDetailsByID(uint(jobID), auth.UserID)
 	if err != nil {
 		return resp.HandleError(c, err)
 	}
@@ -76,7 +76,7 @@ func (h *JobHandler) GetJobsDetailsByID(c fiber.Ctx) error {
 func (h *JobHandler) UpdateJob(c fiber.Ctx) error {
 	jobIDStr := c.Params("id")
 	jobID, err := strconv.ParseUint(jobIDStr, 10, 32)
-	if err != nil {
+	if err != nil || jobID == 0 {
 		return resp.Send(c, resp.BadRequest())
 	}
 

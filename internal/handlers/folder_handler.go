@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/rodatboat/crong/internal/middleware"
 	"github.com/rodatboat/crong/internal/models"
 	"github.com/rodatboat/crong/internal/resp"
 	"github.com/rodatboat/crong/internal/services"
@@ -26,6 +27,8 @@ func (h *FolderHandler) CreateFolder(c fiber.Ctx) error {
 		return resp.Send(c, resp.BadRequest())
 	}
 
+	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
+
 	// Validate request
 	if validationErrors, err := utils.ValidateStruct(&req); err != nil {
 		return resp.HandleValidationError(c, err, validationErrors)
@@ -37,6 +40,7 @@ func (h *FolderHandler) CreateFolder(c fiber.Ctx) error {
 }
 
 func (h *FolderHandler) ReadFolders(c fiber.Ctx) error {
+	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
 
 	// TODO: Call repository to read folders from database
 
@@ -46,10 +50,13 @@ func (h *FolderHandler) ReadFolders(c fiber.Ctx) error {
 }
 
 func (h *FolderHandler) UpdateFolder(c fiber.Ctx) error {
-	folderId, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
+	folderIDStr := c.Params("id")
+	folderID, err := strconv.ParseUint(folderIDStr, 10, 32)
+	if err != nil || folderID == 0 {
 		return resp.Send(c, resp.BadRequest())
 	}
+
+	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
 
 	var req models.FolderUpdate
 	if err := c.Bind().Body(&req); err != nil {
@@ -71,11 +78,13 @@ func (h *FolderHandler) UpdateFolder(c fiber.Ctx) error {
 }
 
 func (h *FolderHandler) DeleteFolder(c fiber.Ctx) error {
-	_, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
+	folderIDStr := c.Params("id")
+	folderID, err := strconv.ParseUint(folderIDStr, 10, 32)
+	if err != nil || folderID == 0 {
 		return resp.Send(c, resp.BadRequest())
 	}
 
+	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
 	// TODO: Call repository to delete folder from database
 
 	return resp.Send(c, resp.Success(nil))
