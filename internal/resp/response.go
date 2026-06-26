@@ -27,7 +27,7 @@ func Success(data any) APIResponse {
 	return APIResponse{
 		Status:  fiber.StatusOK,
 		Message: "Success",
-		Data:    &data,
+		Data:    data,
 	}
 }
 
@@ -56,6 +56,6 @@ func Response(status int, message string, data any) APIResponse {
 	return APIResponse{
 		Status:  status,
 		Message: message,
-		Data:    &data,
+		Data:    data,
 	}
 }

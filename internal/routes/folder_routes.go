@@ -13,6 +13,7 @@ func FolderRoutes(app fiber.Router, serviceContainer *container.Container) {
 
 	folders.Post("/", middleware.Protected(), handler.CreateFolder)
 	folders.Get("/", middleware.Protected(), handler.ReadFolders)
+	folders.Get("/:id", middleware.Protected(), handler.GetFoldersDetailsByID)
 	folders.Put("/:id", middleware.Protected(), handler.UpdateFolder)
 	folders.Delete("/:id", middleware.Protected(), handler.DeleteFolder)
 }

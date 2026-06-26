@@ -44,9 +44,9 @@ func (r *FolderRepository) Create(name string, userID uint) (*entities.Folder, e
 	return folder, nil
 }
 
-func (r *FolderRepository) Update(id uint, name string) (*entities.Folder, error) {
+func (r *FolderRepository) Update(folderID uint, userID uint, name string) (*entities.Folder, error) {
 	var folder entities.Folder
-	if err := r.db.First(&folder, id).Error; err != nil {
+	if err := r.db.Where("id = ? AND user_id = ?", folderID, userID).First(&folder).Error; err != nil {
 		return nil, err
 	}
 
@@ -59,8 +59,13 @@ func (r *FolderRepository) Update(id uint, name string) (*entities.Folder, error
 	return &folder, nil
 }
 
-func (r *FolderRepository) Delete(id uint) error {
-	if err := r.db.Delete(&entities.Folder{}, id).Error; err != nil {
+func (r *FolderRepository) Delete(folderID uint, userID uint) error {
+	var folder entities.Folder
+	if err := r.db.Where("id = ? AND user_id = ?", folderID, userID).First(&folder).Error; err != nil {
+		return err
+	}
+
+	if err := r.db.Delete(folder).Error; err != nil {
 		return err
 	}
 

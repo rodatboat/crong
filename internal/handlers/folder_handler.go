@@ -34,17 +34,38 @@ func (h *FolderHandler) CreateFolder(c fiber.Ctx) error {
 		return resp.HandleValidationError(c, err, validationErrors)
 	}
 
-	// TODO: Call repository to create folder in database
+	folder, err := h.folderService.CreateFolder(auth.UserID, &req)
+	if err != nil {
+		return resp.HandleError(c, err)
+	}
 
-	return resp.Send(c, resp.Success(req))
+	return resp.Send(c, resp.Success(folder))
 }
 
 func (h *FolderHandler) ReadFolders(c fiber.Ctx) error {
 	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
 
-	// TODO: Call repository to read folders from database
+	folders, err := h.folderService.GetFoldersByUser(auth.UserID)
+	if err != nil {
+		return resp.HandleError(c, err)
+	}
 
-	folders := []models.Folder{}
+	return resp.Send(c, resp.Success(folders))
+}
+
+func (h *FolderHandler) GetFoldersDetailsByID(c fiber.Ctx) error {
+	folderIDStr := c.Params("id")
+	folderID, err := strconv.ParseUint(folderIDStr, 10, 32)
+	if err != nil || folderID == 0 {
+		return resp.Send(c, resp.BadRequest())
+	}
+
+	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
+
+	folders, err := h.folderService.GetFolderDetailsByID(uint(folderID), auth.UserID)
+	if err != nil {
+		return resp.HandleError(c, err)
+	}
 
 	return resp.Send(c, resp.Success(folders))
 }
@@ -68,10 +89,9 @@ func (h *FolderHandler) UpdateFolder(c fiber.Ctx) error {
 		return resp.HandleValidationError(c, err, validationErrors)
 	}
 
-	// TODO: Call repository to update folder in database
-
-	folder := models.Folder{
-		ID: uint(folderId),
+	folder, err := h.folderService.UpdateFolder(uint(folderID), auth.UserID, &req)
+	if err != nil {
+		return resp.HandleError(c, err)
 	}
 
 	return resp.Send(c, resp.Success(folder))
@@ -85,7 +105,11 @@ func (h *FolderHandler) DeleteFolder(c fiber.Ctx) error {
 	}
 
 	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
-	// TODO: Call repository to delete folder from database
+
+	err = h.folderService.DeleteFolder(uint(folderID), auth.UserID)
+	if err != nil {
+		return resp.HandleError(c, err)
+	}
 
 	return resp.Send(c, resp.Success(nil))
 }
