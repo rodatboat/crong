@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/rodatboat/crong/internal/entities"
@@ -156,6 +157,7 @@ func (s *JobService) UpdateJob(jobID uint, userID uint, req *models.JobUpdateReq
 		jobEntity.Timezone = req.Timezone
 		jobEntity.Timeout = req.Timeout
 		jobEntity.Enabled = req.Enabled
+		jobEntity.UpdatedAt = time.Now()
 
 		if err := s.jobRepo.Update(tx, jobEntity); err != nil {
 			return err
