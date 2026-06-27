@@ -59,15 +59,21 @@ type JobHeaders struct {
 }
 
 type JobExecution struct {
-	ID               uint      `json:"id"`
-	JobID            uint      `json:"job_id"`
-	ExecutionSuccess bool      `json:"exec_success"`
-	StatusCode       int       `json:"status_code"`
-	DurationMs       int       `json:"duration_ms"`
-	Url              string    `json:"url"`
-	ResponseHeaders  string    `json:"response_headers"`
-	ResponseBody     string    `json:"response_body"`
-	Error            string    `json:"error"`
-	ExecutedAt       time.Time `json:"executed_at"`
-	BatchIdentifier  string    `json:"batch_identifier"`
+	ID              uint   `json:"id"`
+	JobID           uint   `json:"job_id"`
+	BatchIdentifier string `json:"batch_identifier"`
+
+	ExecutionSuccess bool   `json:"exec_success"`
+	StatusCode       int    `json:"status_code"`
+	StatusText       int    `json:"status_text"`
+	DurationMs       int    `json:"duration_ms"`
+	Url              string `json:"url"`
+
+	ResponseHeaders string `json:"response_headers"`
+	ResponseBody    string `json:"response_body"`
+	Error           string `json:"error"`
+
+	ExecutedAt time.Time `json:"executed_at"`
+	PlannedFor time.Time `json:"planned_for"`
+	CreatedAt  time.Time `json:"created_at"`
 }

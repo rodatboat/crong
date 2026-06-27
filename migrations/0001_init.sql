@@ -91,22 +91,26 @@ CREATE TABLE schedule_month (
 CREATE TABLE job_executions (
     id SERIAL PRIMARY KEY,
     job_id INT NOT NULL,
+    batch_identifier TEXT UNIQUE,
 
-    exec_success BOOLEAN,
+    execution_status INT,
     status_code INT,
+    status_text TEXT,
     duration_ms INT,
     url TEXT,
-    batch_identifier TEXT,
     response_headers TEXT,
     response_body TEXT,
     error TEXT,
 
     executed_at TIMESTAMP,
+    planned_for TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     
     FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
 );
+
+-- TODO: Job execution stats (time: dns name look up, app connect, total, etc.)
 
 -- +goose Down
 DROP TABLE IF EXISTS job_executions;

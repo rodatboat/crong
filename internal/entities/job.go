@@ -47,22 +47,3 @@ type Job struct {
 	CreatedAt     time.Time `gorm:"column:created_at;default:now()"`
 	UpdatedAt     time.Time `gorm:"column:updated_at;default:now()"`
 }
-
-func (JobExecution) TableName() string {
-	return "job_executions"
-}
-
-type JobExecution struct {
-	JobID uint `gorm:"index;not null"`
-
-	ExecutionSuccess bool   `gorm:"column:exec_success"`
-	StatusCode       int    `gorm:"column:status_code"`
-	DurationMs       int    `gorm:"column:duration_ms"`
-	Url              string `gorm:"column:url"`
-	BatchIdentifier  string `gorm:"column:batch_identifier"`
-
-	ResponseHeaders string    `gorm:"column:response_headers;type:text"`
-	ResponseBody    string    `gorm:"column:response_body;type:text"`
-	Error           string    `gorm:"column:error;type:text"`
-	ExecutedAt      time.Time `gorm:"column:executed_at;"`
-}
