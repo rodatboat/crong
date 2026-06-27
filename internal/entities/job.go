@@ -55,13 +55,14 @@ func (JobExecution) TableName() string {
 type JobExecution struct {
 	JobID uint `gorm:"index;not null"`
 
-	Success         bool   `gorm:"column:success"`
-	StatusCode      int    `gorm:"column:status_code"`
-	DurationMs      int    `gorm:"column:duration_ms"`
-	Url             string `gorm:"column:url"`
-	BatchIdentifier string `gorm:"column:batch_identifier"`
+	ExecutionSuccess bool   `gorm:"column:exec_success"`
+	StatusCode       int    `gorm:"column:status_code"`
+	DurationMs       int    `gorm:"column:duration_ms"`
+	Url              string `gorm:"column:url"`
+	BatchIdentifier  string `gorm:"column:batch_identifier"`
 
-	ResponseBody string    `gorm:"column:response_body;type:text"`
-	Error        string    `gorm:"column:error;type:text"`
-	ExecutedAt   time.Time `gorm:"column:executed_at;"`
+	ResponseHeaders string    `gorm:"column:response_headers;type:text"`
+	ResponseBody    string    `gorm:"column:response_body;type:text"`
+	Error           string    `gorm:"column:error;type:text"`
+	ExecutedAt      time.Time `gorm:"column:executed_at;"`
 }

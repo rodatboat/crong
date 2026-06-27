@@ -92,11 +92,12 @@ CREATE TABLE job_executions (
     id SERIAL PRIMARY KEY,
     job_id INT NOT NULL,
 
-    success BOOLEAN,
+    exec_success BOOLEAN,
     status_code INT,
     duration_ms INT,
     url TEXT,
     batch_identifier TEXT,
+    response_headers TEXT,
     response_body TEXT,
     error TEXT,
 
