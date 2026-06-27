@@ -6,24 +6,24 @@ import (
 )
 
 type JobExecutionService struct {
-	jobRepo         *repositories.JobRepository
-	scheduleRepo    *repositories.ScheduleRepository
-	folderService   *FolderService
-	scheduleService *ScheduleService
+	jobExecutionRepo *repositories.JobExecutionRepository
 }
 
 func NewJobExecutionService(
-	jobRepo *repositories.JobRepository,
-	scheduleRepo *repositories.ScheduleRepository,
-	folderService *FolderService,
-	scheduleService *ScheduleService,
+	jobExecutionRepo *repositories.JobExecutionRepository,
 ) *JobExecutionService {
 	return &JobExecutionService{
-		jobRepo:         jobRepo,
-		scheduleRepo:    scheduleRepo,
-		folderService:   folderService,
-		scheduleService: scheduleService,
+		jobExecutionRepo: jobExecutionRepo,
 	}
+}
+
+func (s *JobExecutionService) RunJob(jobID uint) error {
+	return nil
+}
+
+func (s *JobExecutionService) GetJobExecutionsByJobID(jobID uint) ([]*models.JobExecution, error) {
+	// TODO: Retrieve all job executions for a given job ID from the job_executions table
+	return nil, nil
 }
 
 func (s *JobExecutionService) CreateJobExecution(jobID uint, jobExecution models.JobExecution) error {

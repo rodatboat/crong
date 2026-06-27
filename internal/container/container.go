@@ -10,15 +10,17 @@ import (
 type Container struct {
 	// Repositories
 	JobRepository      *repositories.JobRepository
+	jobExecutionRepo   *repositories.JobExecutionRepository
 	UserRepository     *repositories.UserRepository
 	FolderRepository   *repositories.FolderRepository
 	ScheduleRepository *repositories.ScheduleRepository
 
 	// Services
-	JobService      *services.JobService
-	UserService     *services.UserService
-	FolderService   *services.FolderService
-	ScheduleService *services.ScheduleService
+	JobService          *services.JobService
+	jobExecutionService *services.JobExecutionService
+	UserService         *services.UserService
+	FolderService       *services.FolderService
+	ScheduleService     *services.ScheduleService
 }
 
 // NewContainer initializes all dependencies
@@ -27,22 +29,27 @@ func NewContainer(db *gorm.DB) *Container {
 	userRepo := repositories.NewUserRepository(db)
 	folderRepo := repositories.NewFolderRepository(db)
 	scheduleRepo := repositories.NewScheduleRepository(db)
+	jobExecutionRepo := repositories.NewJobExecutionRepository(db)
 	jobRepo := repositories.NewJobRepository(db, scheduleRepo)
 
 	// Initialize services with their dependencies
 	userService := services.NewUserService(userRepo)
 	folderService := services.NewFolderService(folderRepo)
-	scheduleService := services.NewScheduleService()
+	scheduleService := services.NewScheduleService(scheduleRepo)
+	jobExecutionService := services.NewJobExecutionService(jobExecutionRepo)
 	jobService := services.NewJobService(jobRepo, scheduleRepo, folderService, scheduleService)
 
 	return &Container{
 		JobRepository:      jobRepo,
+		jobExecutionRepo:   jobExecutionRepo,
 		UserRepository:     userRepo,
 		FolderRepository:   folderRepo,
 		ScheduleRepository: scheduleRepo,
-		JobService:         jobService,
-		UserService:        userService,
-		FolderService:      folderService,
-		ScheduleService:    scheduleService,
+
+		JobService:          jobService,
+		jobExecutionService: jobExecutionService,
+		UserService:         userService,
+		FolderService:       folderService,
+		ScheduleService:     scheduleService,
 	}
 }

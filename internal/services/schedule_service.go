@@ -4,18 +4,47 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/rodatboat/crong/internal/entities"
 	"github.com/rodatboat/crong/internal/models"
+	"github.com/rodatboat/crong/internal/repositories"
 )
 
 type ScheduleService struct {
-	// Can add schedule-specific dependencies here if needed
+	scheduleRepo *repositories.ScheduleRepository
 }
 
-func NewScheduleService() *ScheduleService {
-	return &ScheduleService{}
+func NewScheduleService(scheduleRepo *repositories.ScheduleRepository) *ScheduleService {
+	return &ScheduleService{
+		scheduleRepo: scheduleRepo,
+	}
+}
+
+// FetchPlannedJobs will run every minute and return a list of jobs that are scheduled to run at the given time.
+func (s *ScheduleService) FetchPlannedJobs(plannedTime time.Time) ([]*entities.Job, error) {
+	plannedTimeComponents := []uint{
+		uint(plannedTime.Minute()),
+		uint(plannedTime.Hour()),
+		uint(plannedTime.Day()),
+		uint(plannedTime.Month()),
+		uint(plannedTime.Weekday()),
+	}
+
+	jobs, err := s.scheduleRepo.ListJobsBySchedule(
+		plannedTimeComponents[0],
+		plannedTimeComponents[1],
+		plannedTimeComponents[2],
+		plannedTimeComponents[3],
+		plannedTimeComponents[4],
+	)
+	if err != nil {
+		log.Errorf("Error listing jobs for planned time %+v", plannedTime, err)
+		return nil, err
+	}
+
+	return jobs, nil
 }
 
 // CronExpressionToSchedule parses a cron expression and returns a schedule model
