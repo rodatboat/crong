@@ -3,6 +3,8 @@ package services
 import (
 	"errors"
 
+	"github.com/rodatboat/crong/internal/middleware"
+
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/rodatboat/crong/internal/database"
 	"github.com/rodatboat/crong/internal/entities"
@@ -65,9 +67,15 @@ func (s *UserService) LoginUser(email string, password string) (*models.User, er
 		return nil, resp.ErrBadRequest
 	}
 
-	// TODO: Generate JWT
+	// Generate JWT
+	token, err := middleware.GenerateJWT(userEntity.ID, userEntity.Email)
+	if err != nil {
+		log.Errorf("Failed to generate JWT: %v", err)
+		return nil, err
+	}
+
 	user := s.mapUserEntityToUserModel(userEntity)
-	user.AuthToken = "token"
+	user.AuthToken = token
 
 	return user, nil
 }

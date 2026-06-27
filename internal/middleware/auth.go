@@ -1,11 +1,14 @@
 package middleware
 
 import (
+	"errors"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rodatboat/crong/internal/resp"
 )
 
@@ -22,7 +25,7 @@ func Protected() fiber.Handler {
 		auth, err := authenticate(c, secret)
 		if err != nil {
 			log.Warn(err.Error())
-			return resp.Send(c, resp.Unauthorized())
+			return resp.HandleError(c, err)
 		}
 
 		c.Locals(AuthContextKey, auth)
@@ -34,31 +37,23 @@ func Protected() fiber.Handler {
 func authenticate(c fiber.Ctx, secret string) (*AuthContext, error) {
 	auth := c.Get("Authorization")
 	if auth == "" {
-		return nil, fiber.NewError(fiber.StatusUnauthorized, "missing authorization header")
+		return nil, resp.ErrUnauthorized
 	}
 
-	token := strings.TrimPrefix(auth, "Bearer ")
-	if token != secret {
-		return nil, fiber.NewError(fiber.StatusUnauthorized, "invalid bearer token")
+	tokenString := strings.TrimPrefix(auth, "Bearer ")
+	if tokenString == auth {
+		return nil, resp.ErrUnauthorized
 	}
 
-	// TODO: Remove TEMP & replace with JWT subject/claims.
-	// return jwtware.New(jwtware.Config{
-	// 	SigningKey: jwtware.SigningKey{
-	// 		Key: []byte(secret),
-	// 	},
-	// 	SuccessHandler: func(c fiber.Ctx) error {
-	// 		log.Info("Route authentication successful")
-	// 		return c.Next()
-	// 	},
-	// 	ErrorHandler: func(c fiber.Ctx, err error) error {
-	// 		log.Warn("Route authentication failed")
-	// 		return response.Error(c, fiber.StatusUnauthorized, "Unauthorized")
-	// 	},
-	// })
+	// Parse and validate JWT token
+	claims, err := ParseJWT(tokenString, secret)
+	if err != nil {
+		return nil, resp.ErrUnauthorized
+	}
 
 	return &AuthContext{
-		UserID: 1,
+		UserID: claims.UserID,
+		Email:  claims.Email,
 	}, nil
 }
 
@@ -71,7 +66,72 @@ func AuthDetails(c fiber.Ctx) *AuthContext {
 }
 
 type AuthContext struct {
-	UserID uint `json:"user_id"`
+	UserID uint   `json:"user_id"`
+	Email  string `json:"email"`
 }
 
 const AuthContextKey = "auth"
+
+// JWTClaims represents the JWT claims structure
+type JWTClaims struct {
+	UserID uint   `json:"user_id"`
+	Email  string `json:"email"`
+	jwt.RegisteredClaims
+}
+
+// GenerateJWT creates a new JWT token for the user
+func GenerateJWT(userID uint, email string) (string, error) {
+	secret := os.Getenv("AUTH_SECRET")
+	if secret == "" {
+		return "", errors.New("AUTH_SECRET environment variable is not set")
+	}
+
+	// Set token expiration (e.g., 24 hours)
+	expirationTime := time.Now().Add(24 * time.Hour)
+
+	// Create claims
+	claims := &JWTClaims{
+		UserID: userID,
+		Email:  email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	// Create token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign token with secret
+	tokenString, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+// ParseJWT validates and parses a JWT token
+func ParseJWT(tokenString string, secret string) (*JWTClaims, error) {
+	// Parse token
+	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+		// Verify signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract and validate claims
+	claims, ok := token.Claims.(*JWTClaims)
+	if !ok || !token.Valid {
+		return nil, errors.New("invalid token claims")
+	}
+
+	return claims, nil
+}
