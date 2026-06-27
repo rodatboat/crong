@@ -12,6 +12,20 @@ import (
 	"github.com/rodatboat/crong/internal/resp"
 )
 
+const AuthContextKey = "auth"
+
+type AuthContext struct {
+	UserID uint   `json:"user_id"`
+	Email  string `json:"email"`
+}
+
+// JWTClaims represents the JWT claims structure
+type JWTClaims struct {
+	UserID uint   `json:"user_id"`
+	Email  string `json:"email"`
+	jwt.RegisteredClaims
+}
+
 func Protected() fiber.Handler {
 	log.Info("Initializing authentication middleware")
 	secret := os.Getenv("AUTH_SECRET")
@@ -63,20 +77,6 @@ func AuthDetails(c fiber.Ctx) *AuthContext {
 		return nil
 	}
 	return auth
-}
-
-type AuthContext struct {
-	UserID uint   `json:"user_id"`
-	Email  string `json:"email"`
-}
-
-const AuthContextKey = "auth"
-
-// JWTClaims represents the JWT claims structure
-type JWTClaims struct {
-	UserID uint   `json:"user_id"`
-	Email  string `json:"email"`
-	jwt.RegisteredClaims
 }
 
 // GenerateJWT creates a new JWT token for the user
