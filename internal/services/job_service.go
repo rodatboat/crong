@@ -75,8 +75,8 @@ func (s *JobService) CreateJob(userID uint, req *models.JobCreateRequest) (*mode
 	log.Infof("Creating job for user %v with payload %+v", userID, req)
 
 	// Validate user owns the folder, and that folder exists (if provided)
-	if req.FolderID > 0 {
-		if found, err := s.folderService.FolderExists(req.FolderID, userID); found == false {
+	if req.FolderID != nil && *req.FolderID > 0 {
+		if found, err := s.folderService.FolderExists(*req.FolderID, userID); found == false {
 			if err != nil {
 				return nil, err
 			}
@@ -124,8 +124,8 @@ func (s *JobService) UpdateJob(jobID uint, userID uint, req *models.JobUpdateReq
 	log.Infof("Updating existing job %v for user %v with payload %+v", jobID, userID, req)
 
 	// Validate folder exists if provided
-	if req.FolderID > 0 {
-		if found, err := s.folderService.FolderExists(req.FolderID, userID); found == false {
+	if req.FolderID != nil && *req.FolderID > 0 {
+		if found, err := s.folderService.FolderExists(*req.FolderID, userID); found == false {
 			if err != nil {
 				return nil, err
 			}

@@ -23,6 +23,9 @@ func NewFolderService(folderRepo *repositories.FolderRepository) *FolderService 
 
 func (f *FolderService) FolderExists(folderID uint, userID uint) (bool, error) {
 	log.Infof("Fetching folder with id %v for user %v", folderID, userID)
+	if folderID == 0 {
+		return false, nil
+	}
 	folder, err := f.folderRepo.FindByFolderIDAndUserID(folderID, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

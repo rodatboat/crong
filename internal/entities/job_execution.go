@@ -29,8 +29,8 @@ type JobExecution struct {
 	ResponseBody    string `gorm:"column:response_body;type:text"`
 	Error           string `gorm:"column:error;type:text"`
 
-	ExecutedAt time.Time `gorm:"column:executed_at;"`
-	PlannedFor time.Time `gorm:"column:planned_for;"`
-	CreatedAt  time.Time `gorm:"column:created_at;default:now()"`
-	UpdatedAt  time.Time `gorm:"column:updated_at;default:now()"`
+	ExecutedAt *time.Time `gorm:"column:executed_at;"`
+	PlannedFor *time.Time `gorm:"column:planned_for;"`
+	CreatedAt  time.Time  `gorm:"column:created_at;default:now()"`
+	UpdatedAt  time.Time  `gorm:"column:updated_at;default:now()"`
 }

@@ -10,7 +10,7 @@ type Job struct {
 	ID       uint   `json:"id"`
 	Title    string `json:"title"`
 	Url      string `json:"url"`
-	FolderID uint   `json:"folder_id"`
+	FolderID *uint  `json:"folder_id"`
 
 	Method  entities.ReqMethod `json:"method"`
 	Headers []JobHeaders       `json:"headers"`
@@ -22,15 +22,15 @@ type Job struct {
 	Timeout  int    `json:"timeout"`
 	Enabled  bool   `json:"enabled"`
 
-	LastExecution time.Time `json:"last_execution"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
+	LastExecution *time.Time `json:"last_execution"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
 }
 
 type JobCreateRequest struct {
 	Title    string `json:"title" validate:"required"`
 	Url      string `json:"url" validate:"required,url"`
-	FolderID uint   `json:"folder_id"`
+	FolderID *uint  `json:"folder_id"`
 
 	Method  entities.ReqMethod `json:"method" validate:"validmethod"`
 	Headers []JobHeaders       `json:"headers"`
@@ -73,7 +73,7 @@ type JobExecution struct {
 	ResponseBody    string `json:"response_body"`
 	Error           string `json:"error"`
 
-	ExecutedAt time.Time `json:"executed_at"`
-	PlannedFor time.Time `json:"planned_for"`
-	CreatedAt  time.Time `json:"created_at"`
+	ExecutedAt *time.Time `json:"executed_at"`
+	PlannedFor *time.Time `json:"planned_for"`
+	CreatedAt  time.Time  `json:"created_at"`
 }
