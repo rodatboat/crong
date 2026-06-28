@@ -79,11 +79,10 @@ type JobExecution struct {
 }
 
 type JobExecutionStats struct {
-	JobExecutionID  uint  `json:"job_execution_id"`
-	DNSLookupMs     int   `json:"dns_lookup_ms"`
-	TCPConnectMs    int   `json:"tcp_connect_ms"`
-	TLSHandshakeMs  int   `json:"tls_handshake_ms"`
-	TimeToFirstByteMs int `json:"time_to_first_byte_ms"`
-	RequestWriteMs  int   `json:"request_write_ms"`
-	CreatedAt       time.Time `json:"created_at"`
+	JobExecutionID    uint `json:"job_execution_id"`
+	DNSLookupMs       int  `json:"dns_lookup_ms"`
+	TCPConnectMs      int  `json:"tcp_connect_ms"`
+	TLSHandshakeMs    int  `json:"tls_handshake_ms"`
+	TimeToFirstByteMs int  `json:"time_to_first_byte_ms"`
+	RequestWriteMs    int  `json:"request_write_ms"`
 }
