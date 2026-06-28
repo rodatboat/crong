@@ -1,9 +1,13 @@
 package services
 
 import (
+	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"net/http/httptrace"
 	"strings"
 	"time"
 
@@ -24,6 +28,43 @@ func NewJobExecutionService(
 	return &JobExecutionService{
 		jobExecutionRepo: jobExecutionRepo,
 	}
+}
+
+// captureTraceStats returns a context and JobExecutionStats struct that captures HTTP timing metrics
+func captureTraceStats() (context.Context, *entities.JobExecutionStats) {
+	stats := &entities.JobExecutionStats{}
+
+	trace := &httptrace.ClientTrace{
+		DNSStart: func(_ httptrace.DNSStartInfo) {
+			stats.DNSLookupMs = -int(time.Now().UnixMilli())
+		},
+		DNSDone: func(_ httptrace.DNSDoneInfo) {
+			stats.DNSLookupMs += int(time.Now().UnixMilli())
+		},
+		ConnectStart: func(_, _ string) {
+			stats.TCPConnectMs = -int(time.Now().UnixMilli())
+		},
+		ConnectDone: func(_, _ string, _ error) {
+			stats.TCPConnectMs += int(time.Now().UnixMilli())
+		},
+		TLSHandshakeStart: func() {
+			stats.TLSHandshakeMs = -int(time.Now().UnixMilli())
+		},
+		TLSHandshakeDone: func(_ tls.ConnectionState, _ error) {
+			stats.TLSHandshakeMs += int(time.Now().UnixMilli())
+		},
+		WroteRequest: func(_ httptrace.WroteRequestInfo) {
+			stats.RequestWriteMs = -int(time.Now().UnixMilli())
+		},
+		GotFirstResponseByte: func() {
+			stats.TimeToFirstByteMs = -int(time.Now().UnixMilli())
+			stats.RequestWriteMs += int(time.Now().UnixMilli())
+			stats.TimeToFirstByteMs += int(time.Now().UnixMilli())
+		},
+	}
+
+	ctx := httptrace.WithClientTrace(context.Background(), trace)
+	return ctx, stats
 }
 
 func (s *JobExecutionService) ExecuteJob(jobEntity entities.Job) (*entities.JobExecution, error) {
@@ -63,6 +104,11 @@ func (s *JobExecutionService) ExecuteJob(jobEntity entities.Job) (*entities.JobE
 		return nil, err
 	}
 
+	// Attach httptrace to capture HTTP timing metrics
+	traceCtx, traceStats := captureTraceStats()
+	req = req.WithContext(traceCtx)
+	_ = traceStats // Available for future implementation
+
 	// Set headers
 	for _, header := range job.Headers {
 		req.Header.Set(header.Key, header.Value)
@@ -75,39 +121,45 @@ func (s *JobExecutionService) ExecuteJob(jobEntity entities.Job) (*entities.JobE
 
 	// Send request
 	jobExecution.ExecutedAt = &executionStartTs
+	jobExecution.PlannedFor = &executionStartTs
 	resp, err := client.Do(req)
 	finishedAt := time.Now()
+	log.Infof("Job %v finished at %v, with stats %+v", job.ID, finishedAt, traceStats)
+
 	if err != nil {
 		log.Errorf("Error executing job: %v", err)
 		jobExecution.ExecutionStatus = entities.FAILED
 		jobExecution.Error = err.Error()
+		jobExecution.DurationMs = int(finishedAt.Sub(executionStartTs).Milliseconds())
 	} else {
-		// Update job execution
-		jobExecution.ExecutionStatus = entities.COMPLETED
+		defer resp.Body.Close()
 
 		// Update job execution
+		jobExecution.ExecutionStatus = entities.COMPLETED
 		jobExecution.StatusCode = resp.StatusCode
 		jobExecution.StatusText = resp.Status
 		jobExecution.DurationMs = int(finishedAt.Sub(executionStartTs).Milliseconds())
 
-		// Read response
-		respBody, err := json.Marshal(resp.Body)
+		// Read response body
+		bodyBytes, err := io.ReadAll(resp.Body)
 		if err != nil {
 			log.Errorf("Error reading response body: %v", err)
-			return nil, err
+			jobExecution.Error = err.Error()
+			jobExecution.ExecutionStatus = entities.FAILED
+		} else {
+			jobExecution.ResponseBody = string(bodyBytes)
 		}
-		jobExecution.ResponseBody = string(respBody)
 
 		// Read headers
 		respHeaders, err := json.Marshal(resp.Header)
 		if err != nil {
 			log.Errorf("Error reading response headers: %v", err)
-			return nil, err
+		} else {
+			jobExecution.ResponseHeaders = string(respHeaders)
 		}
-		jobExecution.ResponseHeaders = string(respHeaders)
+
+		log.Infof("Finished executing job %v, status: %v", jobEntity.ID, resp.StatusCode)
 	}
-	log.Infof("Finished executing job %v, status: %v", jobEntity.ID, resp.StatusCode)
-	defer resp.Body.Close()
 
 	if err := s.jobExecutionRepo.Create(jobExecution); err != nil {
 		log.Errorf("Error creating job execution: %v", err)

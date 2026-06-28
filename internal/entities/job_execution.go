@@ -19,7 +19,7 @@ type JobExecution struct {
 	JobID           uint   `gorm:"index;not null"`
 	BatchIdentifier string `gorm:"column:batch_identifier;unique"`
 
-	ExecutionStatus ExecutionStatus `gorm:"column:exec_success"`
+	ExecutionStatus ExecutionStatus `gorm:"column:execution_status"`
 	StatusCode      int             `gorm:"column:status_code"`
 	StatusText      string          `gorm:"column:status_text"`
 	DurationMs      int             `gorm:"column:duration_ms"`
@@ -33,4 +33,19 @@ type JobExecution struct {
 	PlannedFor *time.Time `gorm:"column:planned_for;"`
 	CreatedAt  time.Time  `gorm:"column:created_at;default:now()"`
 	UpdatedAt  time.Time  `gorm:"column:updated_at;default:now()"`
+}
+
+type JobExecutionStats struct {
+	ID                uint      `gorm:"column:id;primaryKey"`
+	JobExecutionID    uint      `gorm:"column:job_execution_id;not null;index"`
+	DNSLookupMs       int       `gorm:"column:dns_lookup_ms"`
+	TCPConnectMs      int       `gorm:"column:tcp_connect_ms"`
+	TLSHandshakeMs    int       `gorm:"column:tls_handshake_ms"`
+	TimeToFirstByteMs int       `gorm:"column:time_to_first_byte_ms"`
+	RequestWriteMs    int       `gorm:"column:request_write_ms"`
+	CreatedAt         time.Time `gorm:"column:created_at;default:now()"`
+}
+
+func (JobExecutionStats) TableName() string {
+	return "job_execution_stats"
 }

@@ -63,7 +63,7 @@ type JobExecution struct {
 	JobID           uint   `json:"job_id"`
 	BatchIdentifier string `json:"batch_identifier"`
 
-	ExecutionSuccess bool   `json:"exec_success"`
+	ExecutionSuccess bool   `json:"execution_status"`
 	StatusCode       int    `json:"status_code"`
 	StatusText       int    `json:"status_text"`
 	DurationMs       int    `json:"duration_ms"`
@@ -76,4 +76,14 @@ type JobExecution struct {
 	ExecutedAt *time.Time `json:"executed_at"`
 	PlannedFor *time.Time `json:"planned_for"`
 	CreatedAt  time.Time  `json:"created_at"`
+}
+
+type JobExecutionStats struct {
+	JobExecutionID  uint  `json:"job_execution_id"`
+	DNSLookupMs     int   `json:"dns_lookup_ms"`
+	TCPConnectMs    int   `json:"tcp_connect_ms"`
+	TLSHandshakeMs  int   `json:"tls_handshake_ms"`
+	TimeToFirstByteMs int `json:"time_to_first_byte_ms"`
+	RequestWriteMs  int   `json:"request_write_ms"`
+	CreatedAt       time.Time `json:"created_at"`
 }

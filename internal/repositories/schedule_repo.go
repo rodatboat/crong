@@ -17,11 +17,11 @@ func (r *ScheduleRepository) ListJobsBySchedule(minute uint, hour uint, mday uin
 	var jobs []*entities.Job
 
 	err := r.db.
-		Joins("INNER JOIN schedule_hours sh ON jobs.id = sh.job_id AND (sh.hour = ? OR sh.hour = -1)", hour).
-		Joins("INNER JOIN schedule_minutes sm ON jobs.id = sm.job_id AND (sm.minute = ? OR sm.minute = -1)", minute).
-		Joins("INNER JOIN schedule_mdays smd ON jobs.id = smd.job_id AND (smd.mday = ? OR smd.mday = -1)", mday).
-		Joins("INNER JOIN schedule_wdays sw ON jobs.id = sw.job_id AND (sw.wday = ? OR sw.wday = -1)", wday).
-		Joins("INNER JOIN schedule_months smo ON jobs.id = smo.job_id AND (smo.month = ? OR smo.month = -1)", month).
+		Joins("INNER JOIN schedule_hour sh ON jobs.id = sh.job_id AND (sh.hour = ? OR sh.hour = -1)", hour).
+		Joins("INNER JOIN schedule_minute sm ON jobs.id = sm.job_id AND (sm.minute = ? OR sm.minute = -1)", minute).
+		Joins("INNER JOIN schedule_mday smd ON jobs.id = smd.job_id AND (smd.mday = ? OR smd.mday = -1)", mday).
+		Joins("INNER JOIN schedule_wday sw ON jobs.id = sw.job_id AND (sw.wday = ? OR sw.wday = -1)", wday).
+		Joins("INNER JOIN schedule_month smo ON jobs.id = smo.job_id AND (smo.month = ? OR smo.month = -1)", month).
 		Where("jobs.enabled = ?", true).
 		Group("jobs.id").
 		Order("jobs.id ASC").
