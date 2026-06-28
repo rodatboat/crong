@@ -17,6 +17,13 @@
             "request": "launch",
             "mode": "debug",
             "program": "./cmd/scheduler/main.go"
+        },
+        {
+            "name": "Debug API & Scheduler",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "./cmd/all/main.go"
         }
     ]
 }
