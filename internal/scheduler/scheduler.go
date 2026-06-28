@@ -2,9 +2,9 @@ package scheduler
 
 import (
 	"context"
-	"log"
 	"time"
 
+	"github.com/gofiber/fiber/v3/log"
 	"github.com/rodatboat/crong/internal/entities"
 	"github.com/rodatboat/crong/internal/repositories"
 )
@@ -37,7 +37,7 @@ func (s *Scheduler) Start(ctx context.Context) {
 	now := time.Now()
 	nextMinute := now.Truncate(time.Minute).Add(time.Minute)
 	waitDuration := time.Until(nextMinute)
-	log.Printf("Scheduler: first tick in %s", waitDuration.Round(time.Second))
+	log.Warnf("Scheduler: first tick in %s", waitDuration.Round(time.Second))
 
 	select {
 	case <-ctx.Done():
@@ -53,7 +53,7 @@ func (s *Scheduler) Start(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("Scheduler: stopped")
+			log.Warnf("Scheduler: stopped")
 			return
 		case <-ticker.C:
 			s.tick()
@@ -64,17 +64,17 @@ func (s *Scheduler) Start(ctx context.Context) {
 func (s *Scheduler) tick() {
 	jobs, err := loadDueJobs(s.scheduleRepo)
 	if err != nil {
-		log.Printf("Scheduler: error loading due jobs: %v", err)
+		log.Errorf("Scheduler: error loading due jobs: %v", err)
 		return
 	}
 
-	log.Printf("Scheduler: %d job(s) due this tick", len(jobs))
+	log.Infof("Scheduler: %d job(s) due this tick", len(jobs))
 
 	for _, job := range jobs {
 		select {
 		case s.jobQueue <- *job:
 		default:
-			log.Printf("Scheduler: job queue full, dropping job %d", job.ID)
+			log.Warnf("Scheduler: job queue full, dropping job %d", job.ID)
 		}
 	}
 }

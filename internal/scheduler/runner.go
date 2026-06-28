@@ -2,9 +2,9 @@ package scheduler
 
 import (
 	"context"
-	"log"
 	"sync"
 
+	"github.com/gofiber/fiber/v3/log"
 	"github.com/rodatboat/crong/internal/entities"
 	"github.com/rodatboat/crong/internal/services"
 )
@@ -43,7 +43,7 @@ func (wp *WorkerPool) Start(ctx context.Context) {
 	}
 
 	wg.Wait()
-	log.Println("Worker pool: stopped")
+	log.Infof("Worker pool: stopped")
 }
 
 func (wp *WorkerPool) work(ctx context.Context, workerID int) {
@@ -55,9 +55,9 @@ func (wp *WorkerPool) work(ctx context.Context, workerID int) {
 			if !ok {
 				return
 			}
-			log.Printf("Worker %d: executing job %d", workerID, job.ID)
+			log.Infof("Worker %d: executing job %d", workerID, job.ID)
 			if _, err := wp.execService.ExecuteJob(job); err != nil {
-				log.Printf("Worker %d: job %d failed: %v", workerID, job.ID, err)
+				log.Errorf("Worker %d: job %d failed: %v", workerID, job.ID, err)
 			}
 		}
 	}

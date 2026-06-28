@@ -1,9 +1,8 @@
 package main
 
 import (
-	"log"
-
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/joho/godotenv"
 	"github.com/rodatboat/crong/internal/config"
@@ -32,9 +31,9 @@ func main() {
 	routes.RegisterRoutes(app, serviceContainer)
 
 	// Start the server
-	log.Printf("Server starting on port %s", cfg.Port)
+	log.Infof("Server starting on port %s", cfg.Port)
 	if err := app.Listen(":" + cfg.Port); err != nil {
-		log.Fatalf("Server error: %v", err)
+		log.Errorf("Server error: %v", err)
 	}
 
 }
