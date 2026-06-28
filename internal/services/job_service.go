@@ -1,7 +1,6 @@
 package services
 
 import (
-	"encoding/json"
 	"errors"
 	"time"
 
@@ -10,7 +9,7 @@ import (
 	"github.com/rodatboat/crong/internal/models"
 	"github.com/rodatboat/crong/internal/repositories"
 	"github.com/rodatboat/crong/internal/resp"
-	"gorm.io/datatypes"
+	"github.com/rodatboat/crong/internal/utils"
 	"gorm.io/gorm"
 )
 
@@ -52,7 +51,7 @@ func (s *JobService) GetJobsByUser(userID uint) ([]*models.Job, error) {
 
 	jobs := make([]*models.Job, len(jobEntities))
 	for idx, jobEntity := range jobEntities {
-		jobs[idx] = s.mapJobEntityToJobModel(jobEntity)
+		jobs[idx] = utils.MapJobEntityToJobModel(jobEntity)
 	}
 	return jobs, nil
 }
@@ -68,7 +67,7 @@ func (s *JobService) GetJobsDetailsByID(jobID uint, userID uint) (*models.Job, e
 		return nil, err
 	}
 
-	return s.mapJobEntityToJobModel(jobEntity), nil
+	return utils.MapJobEntityToJobModel(jobEntity), nil
 }
 
 func (s *JobService) CreateJob(userID uint, req *models.JobCreateRequest) (*models.Job, error) {
@@ -92,7 +91,7 @@ func (s *JobService) CreateJob(userID uint, req *models.JobCreateRequest) (*mode
 	}
 
 	// Map request to job entity
-	jobEntity := s.mapJobCreateRequestToEntity(userID, req)
+	jobEntity := utils.MapJobCreateRequestToEntity(userID, req)
 
 	// Create job and schedule atomically using transaction callback
 	err = s.jobRepo.WithTransaction(func(tx *gorm.DB) error {
@@ -117,7 +116,7 @@ func (s *JobService) CreateJob(userID uint, req *models.JobCreateRequest) (*mode
 		return nil, err
 	}
 
-	return s.mapJobEntityToJobModel(jobEntity), nil
+	return utils.MapJobEntityToJobModel(jobEntity), nil
 }
 
 func (s *JobService) UpdateJob(jobID uint, userID uint, req *models.JobUpdateRequest) (*models.Job, error) {
@@ -150,8 +149,8 @@ func (s *JobService) UpdateJob(jobID uint, userID uint, req *models.JobUpdateReq
 		jobEntity.Title = req.Title
 		jobEntity.Url = req.Url
 		jobEntity.Method = req.Method
-		jobEntity.Headers = convertHeadersToJSON(req.Headers)
-		jobEntity.Auth = convertAuthToJSON(req.Auth)
+		jobEntity.Headers = utils.ConvertHeadersToJSON(req.Headers)
+		jobEntity.Auth = utils.ConvertAuthToJSON(req.Auth)
 		jobEntity.Body = req.Body
 		jobEntity.Cron = req.Cron
 		jobEntity.Timezone = req.Timezone
@@ -191,7 +190,7 @@ func (s *JobService) UpdateJob(jobID uint, userID uint, req *models.JobUpdateReq
 		return nil, err
 	}
 
-	return s.mapJobEntityToJobModel(jobEntity), nil
+	return utils.MapJobEntityToJobModel(jobEntity), nil
 }
 
 func (s *JobService) DeleteJob(jobID uint, userID uint) error {
@@ -217,83 +216,4 @@ func (s *JobService) DeleteJob(jobID uint, userID uint) error {
 func (s *JobService) CreateJobExecution(jobID uint, jobExecution models.JobExecution) error {
 	// TODO: Insert a new record into the job_executions table with the provided execution details
 	return nil
-}
-
-// ========== UTILITIES ==========
-
-/**
- * mapJobCreateRequestToEntity converts a JobCreateRequest to an entities.Job
- */
-func (s *JobService) mapJobCreateRequestToEntity(userID uint, req *models.JobCreateRequest) *entities.Job {
-	return &entities.Job{
-		Title:    req.Title,
-		Url:      req.Url,
-		FolderID: req.FolderID,
-		UserID:   userID,
-		Method:   req.Method,
-		Headers:  convertHeadersToJSON(req.Headers),
-		Auth:     convertAuthToJSON(req.Auth),
-		Body:     req.Body,
-		Cron:     req.Cron,
-		Timezone: req.Timezone,
-		Timeout:  req.Timeout,
-		Enabled:  req.Enabled,
-	}
-}
-
-/**
- * convertHeadersToJSON converts []models.JobHeaders to datatypes.JSON
- */
-func convertHeadersToJSON(headers []models.JobHeaders) datatypes.JSON {
-	if len(headers) == 0 {
-		return nil
-	}
-	data, _ := json.Marshal(headers)
-	return datatypes.JSON(data)
-}
-
-/**
- * convertAuthToJSON converts models.JobAuth to datatypes.JSON
- */
-func convertAuthToJSON(auth models.JobAuth) datatypes.JSON {
-	data, _ := json.Marshal(auth)
-	return datatypes.JSON(data)
-}
-
-func (s *JobService) mapJobEntityToJobModel(jobEntity *entities.Job) *models.Job {
-	return &models.Job{
-		ID:            jobEntity.ID,
-		Title:         jobEntity.Title,
-		Url:           jobEntity.Url,
-		FolderID:      jobEntity.FolderID,
-		Method:        jobEntity.Method,
-		Headers:       convertHeadersJSONToHeadersModel(jobEntity.Headers),
-		Auth:          convertAuthJSONToAuthModel(jobEntity.Auth),
-		Body:          jobEntity.Body,
-		Cron:          jobEntity.Cron,
-		Timezone:      jobEntity.Timezone,
-		Timeout:       jobEntity.Timeout,
-		Enabled:       jobEntity.Enabled,
-		LastExecution: jobEntity.LastExecution,
-		CreatedAt:     jobEntity.CreatedAt,
-		UpdatedAt:     jobEntity.UpdatedAt,
-	}
-}
-
-/**
- * convertAuthJSONToAuthModel converts datatypes.JSON to models.JobAuth
- */
-func convertAuthJSONToAuthModel(authJSON datatypes.JSON) models.JobAuth {
-	var auth models.JobAuth
-	json.Unmarshal([]byte(authJSON), &auth)
-	return auth
-}
-
-/**
- * convertHeadersToJSON converts datatypes.JSON to []models.JobHeaders
- */
-func convertHeadersJSONToHeadersModel(headersJSON datatypes.JSON) []models.JobHeaders {
-	var headers []models.JobHeaders
-	json.Unmarshal([]byte(headersJSON), &headers)
-	return headers
 }

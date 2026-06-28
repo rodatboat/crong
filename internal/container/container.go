@@ -17,7 +17,7 @@ type Container struct {
 
 	// Services
 	JobService          *services.JobService
-	jobExecutionService *services.JobExecutionService
+	JobExecutionService *services.JobExecutionService
 	UserService         *services.UserService
 	FolderService       *services.FolderService
 	ScheduleService     *services.ScheduleService
@@ -47,7 +47,7 @@ func NewContainer(db *gorm.DB) *Container {
 		ScheduleRepository: scheduleRepo,
 
 		JobService:          jobService,
-		jobExecutionService: jobExecutionService,
+		JobExecutionService: jobExecutionService,
 		UserService:         userService,
 		FolderService:       folderService,
 		ScheduleService:     scheduleService,

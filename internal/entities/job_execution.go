@@ -9,7 +9,7 @@ func (JobExecution) TableName() string {
 type ExecutionStatus int
 
 const (
-	SUCCESS ExecutionStatus = iota
+	COMPLETED ExecutionStatus = iota
 	EXECUTING
 	FAILED
 )
