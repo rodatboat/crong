@@ -212,8 +212,3 @@ func (s *JobService) DeleteJob(jobID uint, userID uint) error {
 		return s.scheduleRepo.DeleteSchedulesByJobID(tx, jobID)
 	})
 }
-
-func (s *JobService) CreateJobExecution(jobID uint, jobExecution models.JobExecution) error {
-	// TODO: Insert a new record into the job_executions table with the provided execution details
-	return nil
-}

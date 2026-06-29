@@ -82,7 +82,7 @@ func (s *JobExecutionService) ExecuteJob(jobEntity entities.Job) (*entities.JobE
 	jobBatchId := fmt.Sprintf("%v-%v-%v-%v-%v",
 		jobEntity.ID,
 		executionStartTs.Year(),
-		executionStartTs.Month(),
+		int(executionStartTs.Month()),
 		executionStartTs.Day(),
 		executionStartTs.Unix(),
 	)
@@ -175,9 +175,27 @@ func (s *JobExecutionService) ExecuteJob(jobEntity entities.Job) (*entities.JobE
 	return jobExecution, nil
 }
 
-func (s *JobExecutionService) GetJobExecutionsByJobID(jobID uint) ([]*models.JobExecution, error) {
-	// TODO: Retrieve all job executions for a given job ID from the job_executions table
-	return nil, nil
+func (s *JobExecutionService) GetJobExecutionsByJobID(jobID uint, userID uint, page int, limit int) ([]*models.JobExecution, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 10
+	}
+
+	offset := (page - 1) * limit
+
+	jobExecutions, err := s.jobExecutionRepo.ListByJobID(jobID, userID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*models.JobExecution
+	for _, je := range jobExecutions {
+		result = append(result, utils.MapJobExecutionEntityToJobExecutionModel(je))
+	}
+
+	return result, nil
 }
 
 func (s *JobExecutionService) CreateJobExecution(jobID uint, userID uint) (*models.JobExecution, error) {

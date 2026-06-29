@@ -13,6 +13,7 @@ func JobsRoutes(app fiber.Router, serviceContainer *container.Container) {
 
 	jobs.Post("/", middleware.Protected(serviceContainer.UserRepository), handler.CreateJob)
 	jobs.Get("/:id/run", middleware.Protected(serviceContainer.UserRepository), handler.RunJob)
+	jobs.Get("/:id/executions", middleware.Protected(serviceContainer.UserRepository), handler.GetJobExecutions)
 	jobs.Get("/", middleware.Protected(serviceContainer.UserRepository), handler.ReadJobs)
 	jobs.Get("/:id", middleware.Protected(serviceContainer.UserRepository), handler.GetJobsDetailsByID)
 	jobs.Put("/:id", middleware.Protected(serviceContainer.UserRepository), handler.UpdateJob)

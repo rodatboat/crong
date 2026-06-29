@@ -140,3 +140,39 @@ func (h *JobHandler) RunJob(c fiber.Ctx) error {
 
 	return resp.Send(c, resp.Success(jobExecution))
 }
+
+func (h *JobHandler) GetJobExecutions(c fiber.Ctx) error {
+	jobIDStr := c.Params("id")
+	jobID, err := strconv.ParseUint(jobIDStr, 10, 32)
+	if err != nil || jobID == 0 {
+		return resp.Send(c, resp.BadRequest())
+	}
+
+	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
+
+	// Get pagination parameters
+	page := 1
+	limit := 10
+
+	// Parse & validate page, if not use default
+	if pageStr := c.Query("page"); pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
+	}
+
+	// Parse & validate limit, if not use default
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 100 {
+			limit = l
+		}
+	}
+
+	// Call service layer
+	jobExecutions, err := h.jobExecutionService.GetJobExecutionsByJobID(uint(jobID), uint(auth.UserID), page, limit)
+	if err != nil {
+		return resp.ErrorResponse(c, err)
+	}
+
+	return resp.Send(c, resp.Success(jobExecutions))
+}
