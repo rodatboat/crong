@@ -11,9 +11,9 @@ func FolderRoutes(app fiber.Router, serviceContainer *container.Container) {
 	folders := app.Group("/folders")
 	handler := handlers.NewFolderHandler(serviceContainer.FolderService)
 
-	folders.Post("/", middleware.Protected(), handler.CreateFolder)
-	folders.Get("/", middleware.Protected(), handler.ReadFolders)
-	folders.Get("/:id", middleware.Protected(), handler.GetFoldersDetailsByID)
-	folders.Put("/:id", middleware.Protected(), handler.UpdateFolder)
-	folders.Delete("/:id", middleware.Protected(), handler.DeleteFolder)
+	folders.Post("/", middleware.Protected(serviceContainer.UserRepository), handler.CreateFolder)
+	folders.Get("/", middleware.Protected(serviceContainer.UserRepository), handler.ReadFolders)
+	folders.Get("/:id", middleware.Protected(serviceContainer.UserRepository), handler.GetFoldersDetailsByID)
+	folders.Put("/:id", middleware.Protected(serviceContainer.UserRepository), handler.UpdateFolder)
+	folders.Delete("/:id", middleware.Protected(serviceContainer.UserRepository), handler.DeleteFolder)
 }

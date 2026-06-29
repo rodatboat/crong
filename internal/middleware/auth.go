@@ -9,14 +9,18 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/rodatboat/crong/internal/models"
+	"github.com/rodatboat/crong/internal/repositories"
 	"github.com/rodatboat/crong/internal/resp"
+	"github.com/rodatboat/crong/internal/utils"
 )
 
 const AuthContextKey = "auth"
 
 type AuthContext struct {
-	UserID uint   `json:"user_id"`
-	Email  string `json:"email"`
+	UserID uint         `json:"user_id"`
+	Email  string       `json:"email"`
+	User   *models.User `json:"user"`
 }
 
 // JWTClaims represents the JWT claims structure
@@ -26,7 +30,8 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
-func Protected() fiber.Handler {
+// Protected creates an authentication middleware that validates JWT and ensures user exists
+func Protected(userRepo *repositories.UserRepository) fiber.Handler {
 	log.Info("Initializing authentication middleware")
 	secret := os.Getenv("AUTH_SECRET")
 
@@ -36,10 +41,10 @@ func Protected() fiber.Handler {
 	}
 
 	return func(c fiber.Ctx) error {
-		auth, err := authenticate(c, secret)
+		auth, err := authenticate(c, secret, userRepo)
 		if err != nil {
 			log.Warn(err.Error())
-			return resp.HandleError(c, err)
+			return resp.ErrorResponse(c, err)
 		}
 
 		c.Locals(AuthContextKey, auth)
@@ -48,7 +53,7 @@ func Protected() fiber.Handler {
 	}
 }
 
-func authenticate(c fiber.Ctx, secret string) (*AuthContext, error) {
+func authenticate(c fiber.Ctx, secret string, userRepo *repositories.UserRepository) (*AuthContext, error) {
 	auth := c.Get("Authorization")
 	if auth == "" {
 		return nil, resp.ErrUnauthorized
@@ -65,9 +70,17 @@ func authenticate(c fiber.Ctx, secret string) (*AuthContext, error) {
 		return nil, resp.ErrUnauthorized
 	}
 
+	// Load user from database to ensure they exist and are real
+	user, err := userRepo.FindByEmail(claims.Email)
+	if err != nil {
+		log.Warnf("User %s from token not found in database", claims.Email)
+		return nil, resp.ErrUnauthorized
+	}
+
 	return &AuthContext{
 		UserID: claims.UserID,
 		Email:  claims.Email,
+		User:   utils.MapUserEntityToUserModel(user),
 	}, nil
 }
 

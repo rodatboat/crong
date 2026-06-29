@@ -65,7 +65,7 @@ type JobExecution struct {
 
 	ExecutionSuccess bool   `json:"execution_status"`
 	StatusCode       int    `json:"status_code"`
-	StatusText       int    `json:"status_text"`
+	StatusText       string `json:"status_text"`
 	DurationMs       int    `json:"duration_ms"`
 	Url              string `json:"url"`
 
@@ -75,7 +75,7 @@ type JobExecution struct {
 
 	ExecutedAt *time.Time `json:"executed_at"`
 	PlannedFor *time.Time `json:"planned_for"`
-	CreatedAt  time.Time  `json:"created_at"`
+	CreatedAt  *time.Time `json:"created_at"`
 }
 
 type JobExecutionStats struct {

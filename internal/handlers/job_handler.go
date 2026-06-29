@@ -12,12 +12,17 @@ import (
 )
 
 type JobHandler struct {
-	jobService *services.JobService
+	jobService          *services.JobService
+	jobExecutionService *services.JobExecutionService
 }
 
-func NewJobHandler(jobService *services.JobService) *JobHandler {
+func NewJobHandler(
+	jobService *services.JobService,
+	jobExecutionService *services.JobExecutionService,
+) *JobHandler {
 	return &JobHandler{
-		jobService: jobService,
+		jobService:          jobService,
+		jobExecutionService: jobExecutionService,
 	}
 }
 
@@ -37,7 +42,7 @@ func (h *JobHandler) CreateJob(c fiber.Ctx) error {
 	// Call service layer
 	job, err := h.jobService.CreateJob(auth.UserID, &req)
 	if err != nil {
-		return resp.HandleError(c, err)
+		return resp.ErrorResponse(c, err)
 	}
 
 	return resp.Send(c, resp.Success(job))
@@ -49,7 +54,7 @@ func (h *JobHandler) ReadJobs(c fiber.Ctx) error {
 	// Call service layer
 	jobs, err := h.jobService.GetJobsByUser(auth.UserID)
 	if err != nil {
-		return resp.HandleError(c, err)
+		return resp.ErrorResponse(c, err)
 	}
 
 	return resp.Send(c, resp.Success(jobs))
@@ -67,7 +72,7 @@ func (h *JobHandler) GetJobsDetailsByID(c fiber.Ctx) error {
 	// Call service layer
 	jobs, err := h.jobService.GetJobsDetailsByID(uint(jobID), auth.UserID)
 	if err != nil {
-		return resp.HandleError(c, err)
+		return resp.ErrorResponse(c, err)
 	}
 
 	return resp.Send(c, resp.Success(jobs))
@@ -95,7 +100,7 @@ func (h *JobHandler) UpdateJob(c fiber.Ctx) error {
 	// Update job details
 	job, err := h.jobService.UpdateJob(uint(jobID), auth.UserID, &req)
 	if err != nil {
-		return resp.HandleError(c, err)
+		return resp.ErrorResponse(c, err)
 	}
 
 	return resp.Send(c, resp.Success(job))
@@ -112,8 +117,26 @@ func (h *JobHandler) DeleteJob(c fiber.Ctx) error {
 
 	err = h.jobService.DeleteJob(uint(jobID), auth.UserID)
 	if err != nil {
-		return resp.HandleError(c, err)
+		return resp.ErrorResponse(c, err)
 	}
 
 	return resp.Send(c, resp.Success(nil))
+}
+
+func (h *JobHandler) RunJob(c fiber.Ctx) error {
+	jobIDStr := c.Params("id")
+	jobID, err := strconv.ParseUint(jobIDStr, 10, 32)
+	if err != nil || jobID == 0 {
+		return resp.Send(c, resp.BadRequest())
+	}
+
+	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
+
+	// Call service layer
+	jobExecution, err := h.jobExecutionService.CreateJobExecution(uint(jobID), uint(auth.UserID))
+	if err != nil {
+		return resp.ErrorResponse(c, err)
+	}
+
+	return resp.Send(c, resp.Success(jobExecution))
 }

@@ -4,10 +4,10 @@ import (
 	"errors"
 
 	"github.com/rodatboat/crong/internal/middleware"
+	"github.com/rodatboat/crong/internal/utils"
 
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/rodatboat/crong/internal/database"
-	"github.com/rodatboat/crong/internal/entities"
 	"github.com/rodatboat/crong/internal/models"
 	"github.com/rodatboat/crong/internal/repositories"
 	"github.com/rodatboat/crong/internal/resp"
@@ -45,7 +45,7 @@ func (s *UserService) RegisterUser(email string, firstName string, lastName stri
 
 	// TODO: Send verification email
 
-	return s.mapUserEntityToUserModel(userEntity), nil
+	return utils.MapUserEntityToUserModel(userEntity), nil
 }
 
 func (s *UserService) LoginUser(email string, password string) (*models.User, error) {
@@ -74,21 +74,10 @@ func (s *UserService) LoginUser(email string, password string) (*models.User, er
 		return nil, err
 	}
 
-	user := s.mapUserEntityToUserModel(userEntity)
+	user := utils.MapUserEntityToUserModel(userEntity)
 	user.AuthToken = token
 
 	return user, nil
-}
-
-// ========== UTILITIES ==========
-
-func (s *UserService) mapUserEntityToUserModel(userEntity *entities.User) *models.User {
-	return &models.User{
-		ID:        userEntity.ID,
-		FirstName: userEntity.FirstName,
-		LastName:  userEntity.LastName,
-		Email:     userEntity.Email,
-	}
 }
 
 // HashPassword generates a bcrypt hash for the given password.

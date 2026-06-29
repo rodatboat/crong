@@ -33,7 +33,7 @@ func (h *UserHandler) LoginUser(c fiber.Ctx) error {
 
 	user, err := h.userService.LoginUser(req.Email, req.Password)
 	if err != nil {
-		return resp.HandleError(c, err)
+		return resp.ErrorResponse(c, err)
 	}
 
 	return resp.Send(c, resp.Success(user))
@@ -55,7 +55,7 @@ func (h *UserHandler) RegisterUser(c fiber.Ctx) error {
 		if errors.Is(err, resp.ErrUserAlreadyExists) {
 			return resp.Send(c, resp.Response(fiber.StatusConflict, resp.ErrUserAlreadyExists.Error(), nil))
 		}
-		return resp.HandleError(c, err)
+		return resp.ErrorResponse(c, err)
 	}
 
 	return resp.Send(c, resp.Success(user))

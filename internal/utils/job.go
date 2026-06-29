@@ -48,6 +48,22 @@ func MapJobEntityToJobModel(jobEntity *entities.Job) *models.Job {
 	}
 }
 
+func MapJobExecutionEntityToJobExecutionModel(jobExecutionEntity *entities.JobExecution) *models.JobExecution {
+	return &models.JobExecution{
+		ID:              jobExecutionEntity.ID,
+		JobID:           jobExecutionEntity.JobID,
+		BatchIdentifier: jobExecutionEntity.BatchIdentifier,
+		StatusCode:      jobExecutionEntity.StatusCode,
+		StatusText:      jobExecutionEntity.StatusText,
+		ResponseBody:    jobExecutionEntity.ResponseBody,
+		ResponseHeaders: jobExecutionEntity.ResponseHeaders,
+		ExecutedAt:      jobExecutionEntity.ExecutedAt,
+		PlannedFor:      jobExecutionEntity.PlannedFor,
+		DurationMs:      jobExecutionEntity.DurationMs,
+		Error:           jobExecutionEntity.Error,
+	}
+}
+
 /**
  * convertHeadersToJSON converts []models.JobHeaders to datatypes.JSON
  */

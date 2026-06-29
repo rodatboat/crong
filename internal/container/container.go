@@ -36,7 +36,7 @@ func NewContainer(db *gorm.DB) *Container {
 	userService := services.NewUserService(userRepo)
 	folderService := services.NewFolderService(folderRepo)
 	scheduleService := services.NewScheduleService(scheduleRepo)
-	jobExecutionService := services.NewJobExecutionService(jobExecutionRepo)
+	jobExecutionService := services.NewJobExecutionService(jobExecutionRepo, jobRepo)
 	jobService := services.NewJobService(jobRepo, scheduleRepo, folderService, scheduleService)
 
 	return &Container{

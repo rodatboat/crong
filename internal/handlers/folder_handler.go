@@ -36,7 +36,7 @@ func (h *FolderHandler) CreateFolder(c fiber.Ctx) error {
 
 	folder, err := h.folderService.CreateFolder(auth.UserID, &req)
 	if err != nil {
-		return resp.HandleError(c, err)
+		return resp.ErrorResponse(c, err)
 	}
 
 	return resp.Send(c, resp.Success(folder))
@@ -47,7 +47,7 @@ func (h *FolderHandler) ReadFolders(c fiber.Ctx) error {
 
 	folders, err := h.folderService.GetFoldersByUser(auth.UserID)
 	if err != nil {
-		return resp.HandleError(c, err)
+		return resp.ErrorResponse(c, err)
 	}
 
 	return resp.Send(c, resp.Success(folders))
@@ -64,7 +64,7 @@ func (h *FolderHandler) GetFoldersDetailsByID(c fiber.Ctx) error {
 
 	folders, err := h.folderService.GetFolderDetailsByID(uint(folderID), auth.UserID)
 	if err != nil {
-		return resp.HandleError(c, err)
+		return resp.ErrorResponse(c, err)
 	}
 
 	return resp.Send(c, resp.Success(folders))
@@ -91,7 +91,7 @@ func (h *FolderHandler) UpdateFolder(c fiber.Ctx) error {
 
 	folder, err := h.folderService.UpdateFolder(uint(folderID), auth.UserID, &req)
 	if err != nil {
-		return resp.HandleError(c, err)
+		return resp.ErrorResponse(c, err)
 	}
 
 	return resp.Send(c, resp.Success(folder))
@@ -108,7 +108,7 @@ func (h *FolderHandler) DeleteFolder(c fiber.Ctx) error {
 
 	err = h.folderService.DeleteFolder(uint(folderID), auth.UserID)
 	if err != nil {
-		return resp.HandleError(c, err)
+		return resp.ErrorResponse(c, err)
 	}
 
 	return resp.Send(c, resp.Success(nil))

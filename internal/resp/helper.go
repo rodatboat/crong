@@ -12,7 +12,7 @@ func Send(ctx fiber.Ctx, resp APIResponse) error {
 	return ctx.Status(resp.Status).JSON(resp)
 }
 
-func HandleError(ctx fiber.Ctx, err error) error {
+func ErrorResponse(ctx fiber.Ctx, err error) error {
 	var response APIResponse
 	if errors.Is(err, ErrNotFound) {
 		response = NotFound()

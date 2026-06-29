@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,18 +16,23 @@ import (
 	"github.com/rodatboat/crong/internal/entities"
 	"github.com/rodatboat/crong/internal/models"
 	"github.com/rodatboat/crong/internal/repositories"
+	"github.com/rodatboat/crong/internal/resp"
 	"github.com/rodatboat/crong/internal/utils"
+	"gorm.io/gorm"
 )
 
 type JobExecutionService struct {
 	jobExecutionRepo *repositories.JobExecutionRepository
+	jobRepo          *repositories.JobRepository
 }
 
 func NewJobExecutionService(
 	jobExecutionRepo *repositories.JobExecutionRepository,
+	jobRepo *repositories.JobRepository,
 ) *JobExecutionService {
 	return &JobExecutionService{
 		jobExecutionRepo: jobExecutionRepo,
+		jobRepo:          jobRepo,
 	}
 }
 
@@ -174,7 +180,21 @@ func (s *JobExecutionService) GetJobExecutionsByJobID(jobID uint) ([]*models.Job
 	return nil, nil
 }
 
-func (s *JobExecutionService) CreateJobExecution(jobID uint, jobExecution models.JobExecution) error {
-	// TODO: Insert a new record into the job_executions table with the provided execution details
-	return nil
+func (s *JobExecutionService) CreateJobExecution(jobID uint, userID uint) (*models.JobExecution, error) {
+	log.Infof("Creating new job execution for job %v, user %v", jobID, userID)
+
+	jobEntity, err := s.jobRepo.FindByJobID(jobID, userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, resp.ErrNotFound
+		}
+		return nil, err
+	}
+
+	// Run the job
+	jobExecution, err := s.ExecuteJob(*jobEntity)
+	if err != nil {
+		return nil, err
+	}
+	return utils.MapJobExecutionEntityToJobExecutionModel(jobExecution), nil
 }
