@@ -36,7 +36,7 @@ type JobCreateRequest struct {
 	Headers []JobHeaders       `json:"headers"`
 	Auth    JobAuth            `json:"auth"`
 	Body    string             `json:"body" validate:"max=10000"`
-	Cron    string `json:"cron" validate:"required,validcron,max=100"`
+	Cron    string             `json:"cron" validate:"required,validcron,max=100"`
 
 	Timezone string `json:"timezone" validate:"max=50"`
 	Timeout  int    `json:"timeout" validate:"required,max=30"`
@@ -63,11 +63,11 @@ type JobExecution struct {
 	JobID           uint   `json:"job_id"`
 	BatchIdentifier string `json:"batch_identifier"`
 
-	ExecutionSuccess bool   `json:"execution_status"`
-	StatusCode       int    `json:"status_code"`
-	StatusText       string `json:"status_text"`
-	DurationMs       int    `json:"duration_ms"`
-	Url              string `json:"url"`
+	ExecutionStatus entities.ExecutionStatus `json:"execution_status"`
+	StatusCode      int                      `json:"status_code"`
+	StatusText      string                   `json:"status_text"`
+	DurationMs      int                      `json:"duration_ms"`
+	Url             string                   `json:"url"`
 
 	ResponseHeaders string `json:"response_headers"`
 	ResponseBody    string `json:"response_body"`
@@ -75,7 +75,7 @@ type JobExecution struct {
 
 	ExecutedAt *time.Time `json:"executed_at"`
 	PlannedFor *time.Time `json:"planned_for"`
-	CreatedAt  *time.Time `json:"created_at"`
+	CreatedAt  time.Time  `json:"created_at"`
 }
 
 type JobExecutionStats struct {

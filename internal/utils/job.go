@@ -17,11 +17,13 @@ func MapJobCreateRequestToEntity(userID uint, req *models.JobCreateRequest) *ent
 		Url:      req.Url,
 		FolderID: req.FolderID,
 		UserID:   userID,
-		Method:   req.Method,
-		Headers:  ConvertHeadersToJSON(req.Headers),
-		Auth:     ConvertAuthToJSON(req.Auth),
-		Body:     req.Body,
-		Cron:     req.Cron,
+
+		Method:  req.Method,
+		Headers: ConvertHeadersToJSON(req.Headers),
+		Auth:    ConvertAuthToJSON(req.Auth),
+		Body:    req.Body,
+		Cron:    req.Cron,
+
 		Timezone: req.Timezone,
 		Timeout:  req.Timeout,
 		Enabled:  req.Enabled,
@@ -30,18 +32,21 @@ func MapJobCreateRequestToEntity(userID uint, req *models.JobCreateRequest) *ent
 
 func MapJobEntityToJobModel(jobEntity *entities.Job) *models.Job {
 	return &models.Job{
-		ID:            jobEntity.ID,
-		Title:         jobEntity.Title,
-		Url:           jobEntity.Url,
-		FolderID:      jobEntity.FolderID,
-		Method:        jobEntity.Method,
-		Headers:       ConvertHeadersJSONToHeadersModel(jobEntity.Headers),
-		Auth:          ConvertAuthJSONToAuthModel(jobEntity.Auth),
-		Body:          jobEntity.Body,
-		Cron:          jobEntity.Cron,
-		Timezone:      jobEntity.Timezone,
-		Timeout:       jobEntity.Timeout,
-		Enabled:       jobEntity.Enabled,
+		ID:       jobEntity.ID,
+		Title:    jobEntity.Title,
+		Url:      jobEntity.Url,
+		FolderID: jobEntity.FolderID,
+
+		Method:  jobEntity.Method,
+		Headers: ConvertHeadersJSONToHeadersModel(jobEntity.Headers),
+		Auth:    ConvertAuthJSONToAuthModel(jobEntity.Auth),
+		Body:    jobEntity.Body,
+		Cron:    jobEntity.Cron,
+
+		Timezone: jobEntity.Timezone,
+		Timeout:  jobEntity.Timeout,
+		Enabled:  jobEntity.Enabled,
+
 		LastExecution: jobEntity.LastExecution,
 		CreatedAt:     jobEntity.CreatedAt,
 		UpdatedAt:     jobEntity.UpdatedAt,
@@ -53,14 +58,19 @@ func MapJobExecutionEntityToJobExecutionModel(jobExecutionEntity *entities.JobEx
 		ID:              jobExecutionEntity.ID,
 		JobID:           jobExecutionEntity.JobID,
 		BatchIdentifier: jobExecutionEntity.BatchIdentifier,
+
+		ExecutionStatus: jobExecutionEntity.ExecutionStatus,
 		StatusCode:      jobExecutionEntity.StatusCode,
 		StatusText:      jobExecutionEntity.StatusText,
-		ResponseBody:    jobExecutionEntity.ResponseBody,
-		ResponseHeaders: jobExecutionEntity.ResponseHeaders,
-		ExecutedAt:      jobExecutionEntity.ExecutedAt,
-		PlannedFor:      jobExecutionEntity.PlannedFor,
 		DurationMs:      jobExecutionEntity.DurationMs,
+		Url:             jobExecutionEntity.Url,
+
+		ResponseHeaders: jobExecutionEntity.ResponseHeaders,
+		ResponseBody:    jobExecutionEntity.ResponseBody,
 		Error:           jobExecutionEntity.Error,
+
+		ExecutedAt: jobExecutionEntity.ExecutedAt,
+		PlannedFor: jobExecutionEntity.PlannedFor,
 	}
 }
 
