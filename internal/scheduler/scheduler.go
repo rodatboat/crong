@@ -77,4 +77,23 @@ func (s *Scheduler) tick() {
 			log.Warnf("Scheduler: job queue full, dropping job %d", job.ID)
 		}
 	}
+
+	// Check if cleanup should run
+	// s.checkAndRunCleanup()
 }
+
+// checkAndRunCleanup checks if it's time to run the cleanup job based on schedule
+// func (s *Scheduler) checkAndRunCleanup() {
+// 	now := time.Now().UTC()
+
+// 	// Parse the cleanup schedule (cron-like: minute hour day month weekday)
+// 	if shouldRunCleanup(now, s.lastCleanupExecution, s.cleanupSchedule) {
+// 		log.Infof("Scheduler: triggering cleanup job")
+// 		go func() {
+// 			if err := s.jobExecutionService.CleanupOldExecutions(s.cleanupRetention); err != nil {
+// 				log.Errorf("Scheduler: cleanup job failed: %v", err)
+// 			}
+// 		}()
+// 		s.lastCleanupExecution = now
+// 	}
+// }

@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"time"
+
 	"github.com/rodatboat/crong/internal/entities"
 	"gorm.io/gorm"
 )
@@ -33,4 +35,12 @@ func (r *JobExecutionRepository) ListByJobID(jobID uint, userID uint, limit int,
 	}
 
 	return jobExecutions, nil
+}
+
+func (r *JobExecutionRepository) DeleteOldExecutions(retentionDays int) error {
+	cutoffDate := time.Now().AddDate(0, 0, -retentionDays)
+	if err := r.db.Where("executed_at < ?", cutoffDate).Delete(&entities.JobExecution{}).Error; err != nil {
+		return err
+	}
+	return nil
 }

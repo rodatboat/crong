@@ -18,22 +18,24 @@ type Config struct {
 	DBSSLMode  string
 	DBSchema   string
 
-	// Auth
-	AuthSecret string
+	// Cleanup Job
+	CleanupSchedule  string // Cron format, defaults to weekly (0 0 * * 0 = Sunday midnight)
+	CleanupRetention int    // Days to retain execution history, defaults to 30
 }
 
 // Load reads configuration from environment variables
 func Load() *Config {
 	return &Config{
-		Port:       getEnv("PORT", "3000"),
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "5435"),
-		DBUser:     getEnv("DB_USER", "postgres"),
-		DBPassword: getEnv("DB_PASSWORD", "password"),
-		DBName:     getEnv("DB_NAME", "postgres"),
-		DBSSLMode:  getEnv("DB_SSL_MODE", "disable"),
-		DBSchema:   getEnv("DB_SCHEMA", "crong"),
-		AuthSecret: getEnv("AUTH_SECRET", ""),
+		Port:             getEnv("PORT", "3000"),
+		DBHost:           getEnv("DB_HOST", "localhost"),
+		DBPort:           getEnv("DB_PORT", "5435"),
+		DBUser:           getEnv("DB_USER", "postgres"),
+		DBPassword:       getEnv("DB_PASSWORD", "password"),
+		DBName:           getEnv("DB_NAME", "postgres"),
+		DBSSLMode:        getEnv("DB_SSL_MODE", "disable"),
+		DBSchema:         getEnv("DB_SCHEMA", "crong"),
+		CleanupSchedule:  getEnv("CLEANUP_SCHEDULE", "0 0 * * 0"), // Sunday midnight
+		CleanupRetention: getEnvInt("CLEANUP_RETENTION", 30),      // 30 days
 	}
 }
 
@@ -51,4 +53,21 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+// Helper function to get environment variable as integer with default
+func getEnvInt(key string, defaultValue int) int {
+	if value, exists := os.LookupEnv(key); exists {
+		if intVal, err := parseToInt(value); err == nil {
+			return intVal
+		}
+	}
+	return defaultValue
+}
+
+// Helper function to parse string to int
+func parseToInt(s string) (int, error) {
+	var num int
+	_, err := fmt.Sscanf(s, "%d", &num)
+	return num, err
 }

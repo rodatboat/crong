@@ -198,6 +198,18 @@ func (s *JobExecutionService) GetJobExecutionsByJobID(jobID uint, userID uint, p
 	return result, nil
 }
 
+func (s *JobExecutionService) CleanupOldExecutions(retentionDays int) error {
+	log.Infof("Running cleanup job: removing job executions older than %d days", retentionDays)
+
+	if err := s.jobExecutionRepo.DeleteOldExecutions(retentionDays); err != nil {
+		log.Errorf("Error cleaning up old job executions: %v", err)
+		return err
+	}
+
+	log.Infof("Cleanup job completed successfully")
+	return nil
+}
+
 func (s *JobExecutionService) CreateJobExecution(jobID uint, userID uint) (*models.JobExecution, error) {
 	log.Infof("Creating new job execution for job %v, user %v", jobID, userID)
 
