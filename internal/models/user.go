@@ -18,18 +18,18 @@ type User struct {
 }
 
 type UserLogin struct {
-	Email    string `json:"email" validate:"required"`
-	Password string `json:"password" validate:"required"`
+	Email    string `json:"email" validate:"required,max=255"`
+	Password string `json:"password" validate:"required,max=255"`
 }
 
 type UserRegister struct {
-	FirstName string `json:"first_name" validate:"required"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email" validate:"required"`
-	Password  string `json:"password" validate:"required"`
+	FirstName string `json:"first_name" validate:"required,max=100"`
+	LastName  string `json:"last_name" validate:"max=100"`
+	Email     string `json:"email" validate:"required,max=255"`
+	Password  string `json:"password" validate:"required,max=255"`
 }
 
 type UserUpdate struct {
-	FirstName string `json:"first_name" validate:"required"`
-	LastName  string `json:"last_name"`
+	FirstName string `json:"first_name" validate:"required,max=100"`
+	LastName  string `json:"last_name" validate:"max=100"`
 }
