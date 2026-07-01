@@ -38,7 +38,7 @@ type JobCreateRequest struct {
 	Body    string             `json:"body" validate:"max=10000"`
 	Cron    string             `json:"cron" validate:"required,validcron,max=100"`
 
-	Timezone string `json:"timezone" validate:"max=50"`
+	Timezone string `json:"timezone" validate:"validtimezone,max=50"`
 	Timeout  int    `json:"timeout" validate:"required,max=30"`
 	Enabled  bool   `json:"enabled"`
 }

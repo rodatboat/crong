@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3/log"
@@ -35,6 +36,12 @@ func init() {
 	validate.RegisterValidation("validcron", func(fl validator.FieldLevel) bool {
 		cronExpr := fl.Field().String()
 		return isValidCronExpression(cronExpr)
+	})
+
+	// Register custom validator for timezones
+	validate.RegisterValidation("validtimezone", func(fl validator.FieldLevel) bool {
+		timezone := fl.Field().String()
+		return isValidTimezone(timezone)
 	})
 }
 
@@ -73,6 +80,8 @@ func formatFieldError(fieldErr validator.FieldError) string {
 		return fmt.Sprintf("%s must be a valid HTTP method", field)
 	case "validcron":
 		return fmt.Sprintf("%s must be a valid cron expression (format: minute hour mday month wday)", field)
+	case "validtimezone":
+		return fmt.Sprintf("%s must be a valid timezone", field)
 	case "required_if":
 		return fmt.Sprintf("%s is required when %s", field, fieldErr.Param())
 	case "url":
@@ -171,4 +180,9 @@ func isValidCronField(field string, min, max int) bool {
 	}
 
 	return true
+}
+
+func isValidTimezone(timezone string) bool {
+	_, err := time.LoadLocation(timezone)
+	return err == nil
 }
