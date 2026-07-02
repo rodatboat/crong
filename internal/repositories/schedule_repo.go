@@ -18,6 +18,7 @@ func (r *ScheduleRepository) ListDistinctTimezones() ([]string, error) {
 	var timezones []string
 
 	err := r.db.
+		Model(&entities.Job{}).
 		Distinct("timezone").
 		Where("enabled = ?", true).
 		Order("timezone ASC").

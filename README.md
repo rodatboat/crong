@@ -102,7 +102,7 @@ docker run --name postgres-crong \
 # host: localhost:5435
 # migrations folder: ./migrations
 # schema: crong
-goose -dir ./migrations postgres "postgres://postgres:password@localhost:5432/crong?sslmode=disable" up
+goose -dir ./migrations postgres "postgres://postgres:password@localhost:5435/postgres?sslmode=disable&search_path=crong" up
 ```
 
 ## Running
