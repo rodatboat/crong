@@ -24,9 +24,9 @@ func (r *JobExecutionRepository) Create(jobExecution *entities.JobExecution) err
 	return nil
 }
 
-func (r *JobExecutionRepository) ListByJobID(jobID uint, userID uint, limit int, offset int) ([]*entities.JobExecution, error) {
+func (r *JobExecutionRepository) ListByJobID(jobID uint, limit int, offset int) ([]*entities.JobExecution, error) {
 	var jobExecutions []*entities.JobExecution
-	if err := r.db.Where("job_id = ? AND user_id = ?", jobID, userID).
+	if err := r.db.Where("job_id = ?", jobID).
 		Order("executed_at DESC").
 		Limit(limit).
 		Offset(offset).

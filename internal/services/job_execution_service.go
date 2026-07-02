@@ -185,7 +185,15 @@ func (s *JobExecutionService) GetJobExecutionsByJobID(jobID uint, userID uint, p
 
 	offset := (page - 1) * limit
 
-	jobExecutions, err := s.jobExecutionRepo.ListByJobID(jobID, userID, limit, offset)
+	_, err := s.jobRepo.FindByJobID(jobID, userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, resp.ErrNotFound
+		}
+		return nil, err
+	}
+
+	jobExecutions, err := s.jobExecutionRepo.ListByJobID(jobID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
