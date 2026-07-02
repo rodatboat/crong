@@ -38,7 +38,7 @@ type Job struct {
 	Body    string         `gorm:"column:body"`
 	Cron    string         `gorm:"column:cron;not null"`
 
-	Timezone string `gorm:"column:timezone;not null;default:'UTC'"`
+	Timezone string `gorm:"column:timezone;not null;default:'America/Chicago'"`
 
 	Timeout int  `gorm:"column:timeout;default:30"`
 	Enabled bool `gorm:"column:enabled;not null;default:true"`
