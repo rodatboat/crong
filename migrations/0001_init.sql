@@ -35,7 +35,7 @@ CREATE TABLE jobs (
 
     body TEXT,
 
-    timezone TEXT NOT NULL DEFAULT 'UTC',
+    timezone TEXT NOT NULL DEFAULT 'America/Chicago',
 
     timeout INT DEFAULT 30,
     enabled BOOLEAN DEFAULT TRUE,

@@ -13,7 +13,24 @@ func NewScheduleRepository(db *gorm.DB) *ScheduleRepository {
 	return &ScheduleRepository{db: db}
 }
 
-func (r *ScheduleRepository) ListJobsBySchedule(minute uint, hour uint, mday uint, month uint, wday uint) ([]*entities.Job, error) {
+// ListDistinctTimezones returns all distinct timezones from enabled jobs
+func (r *ScheduleRepository) ListDistinctTimezones() ([]string, error) {
+	var timezones []string
+
+	err := r.db.
+		Distinct("timezone").
+		Where("enabled = ?", true).
+		Order("timezone ASC").
+		Pluck("timezone", &timezones).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return timezones, nil
+}
+
+func (r *ScheduleRepository) ListJobsBySchedule(minute uint, hour uint, mday uint, month uint, wday uint, timezone string) ([]*entities.Job, error) {
 	var jobs []*entities.Job
 
 	err := r.db.
@@ -23,6 +40,7 @@ func (r *ScheduleRepository) ListJobsBySchedule(minute uint, hour uint, mday uin
 		Joins("INNER JOIN schedule_wday sw ON jobs.id = sw.job_id AND (sw.wday = ? OR sw.wday = -1)", wday).
 		Joins("INNER JOIN schedule_month smo ON jobs.id = smo.job_id AND (smo.month = ? OR smo.month = -1)", month).
 		Where("jobs.enabled = ?", true).
+		Where("jobs.timezone = ?", timezone).
 		Group("jobs.id").
 		Order("jobs.id ASC").
 		Find(&jobs).Error
@@ -31,7 +49,7 @@ func (r *ScheduleRepository) ListJobsBySchedule(minute uint, hour uint, mday uin
 		return nil, err
 	}
 
-	return jobs, err
+	return jobs, nil
 }
 
 // CreateSchedules creates all schedule entries (minute, hour, mday, wday, month) in the database
