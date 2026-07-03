@@ -11,5 +11,7 @@ func MapUserEntityToUserModel(userEntity *entities.User) *models.User {
 		FirstName: userEntity.FirstName,
 		LastName:  userEntity.LastName,
 		Email:     userEntity.Email,
+		CreatedAt: userEntity.CreatedAt,
+		UpdatedAt: userEntity.UpdatedAt,
 	}
 }

@@ -28,6 +28,15 @@ func (r *UserRepository) Create(email string, firstName string, lastName string,
 	return user, nil
 }
 
+func (r *UserRepository) FindByID(userID uint) (*entities.User, error) {
+	var user entities.User
+	if err := r.db.Where("id = ?", userID).First(&user).Error; err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func (r *UserRepository) FindByEmail(email string) (*entities.User, error) {
 	var user entities.User
 	if err := r.db.Where("email = ?", email).First(&user).Error; err != nil {

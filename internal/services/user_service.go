@@ -80,6 +80,23 @@ func (s *UserService) LoginUser(email string, password string) (*models.User, er
 	return user, nil
 }
 
+func (s *UserService) UpdateUser(userID uint, updateReq models.UserUpdate) (*models.User, error) {
+	log.Infof("Updating user with id %v", userID)
+
+	// Find user by email
+	userEntity, err := s.userRepo.Update(userID, updateReq.FirstName, updateReq.LastName)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, resp.ErrNotFound
+		}
+		return nil, err
+	}
+
+	user := utils.MapUserEntityToUserModel(userEntity)
+
+	return user, nil
+}
+
 // HashPassword generates a bcrypt hash for the given password.
 func HashPassword(password string) (string, error) {
 	// pepper := os.Getenv("PASSWORD_PEPPER")
