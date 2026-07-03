@@ -84,16 +84,6 @@ func (h *UserHandler) UpdateUser(c fiber.Ctx) error {
 }
 
 func (h *UserHandler) GetUserDetails(c fiber.Ctx) error {
-	var req models.UserLogin
-	if err := c.Bind().Body(&req); err != nil {
-		return resp.Send(c, resp.BadRequest())
-	}
-
-	// Validate request
-	if validationErrors, err := utils.ValidateStruct(&req); err != nil {
-		return resp.HandleValidationError(c, err, validationErrors)
-	}
-
 	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
 
 	return resp.Send(c, resp.Success(auth.User))
