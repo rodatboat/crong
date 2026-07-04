@@ -74,3 +74,11 @@ func (r *FolderRepository) Delete(folderID uint, userID uint) error {
 
 	return nil
 }
+
+func (r *FolderRepository) GetJobsByFolderID(folderID uint, userID uint) ([]entities.Job, error) {
+	var jobEntities []entities.Job
+	if err := r.db.Where("folder_id = ? AND user_id = ?", folderID, userID).Find(&jobEntities).Error; err != nil {
+		return nil, err
+	}
+	return jobEntities, nil
+}

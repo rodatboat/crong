@@ -20,3 +20,8 @@ type FolderCreate struct {
 type FolderUpdate struct {
 	Name string `json:"name" validate:"required,min=1,max=255"`
 }
+
+type FolderDetails struct {
+	Folder
+	Jobs []*Job `json:"jobs"`
+}

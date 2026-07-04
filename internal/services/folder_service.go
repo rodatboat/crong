@@ -8,6 +8,7 @@ import (
 	"github.com/rodatboat/crong/internal/models"
 	"github.com/rodatboat/crong/internal/repositories"
 	"github.com/rodatboat/crong/internal/resp"
+	"github.com/rodatboat/crong/internal/utils"
 	"gorm.io/gorm"
 )
 
@@ -96,6 +97,37 @@ func (f *FolderService) UpdateFolder(folderID uint, userID uint, req *models.Fol
 	}
 
 	return f.mapFolderEntityToFolderModel(folderEntity), nil
+}
+
+func (f *FolderService) GetFolderJobsByID(folderID uint, userID uint) (*models.FolderDetails, error) {
+	log.Infof("Fetching folder with id %v for user %v", folderID, userID)
+
+	var jobs []*models.Job
+	folderEntity, err := f.folderRepo.FindByFolderIDAndUserID(folderID, userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, resp.ErrNotFound
+		}
+		return nil, err
+	}
+
+	jobEntities, err := f.folderRepo.GetJobsByFolderID(folderID, userID)
+	if err != nil {
+		// If no jobs found, initialize empty slice
+		jobs = []*models.Job{}
+	} else {
+		jobs = make([]*models.Job, len(jobEntities))
+		for idx, jobEntity := range jobEntities {
+			jobs[idx] = utils.MapJobEntityToJobModel(&jobEntity)
+		}
+	}
+
+	folderDetails := &models.FolderDetails{
+		Folder: *f.mapFolderEntityToFolderModel(folderEntity),
+		Jobs:   jobs,
+	}
+
+	return folderDetails, nil
 }
 
 func (f *FolderService) DeleteFolder(folderID uint, userID uint) error {

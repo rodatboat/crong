@@ -70,6 +70,23 @@ func (h *FolderHandler) GetFoldersDetailsByID(c fiber.Ctx) error {
 	return resp.Send(c, resp.Success(folders))
 }
 
+func (h *FolderHandler) GetFolderJobsByID(c fiber.Ctx) error {
+	folderIDStr := c.Params("id")
+	folderID, err := strconv.ParseUint(folderIDStr, 10, 32)
+	if err != nil || folderID == 0 {
+		return resp.Send(c, resp.BadRequest())
+	}
+
+	auth := c.Locals(middleware.AuthContextKey).(*middleware.AuthContext)
+
+	folderDetails, err := h.folderService.GetFolderJobsByID(uint(folderID), auth.UserID)
+	if err != nil {
+		return resp.ErrorResponse(c, err)
+	}
+
+	return resp.Send(c, resp.Success(folderDetails))
+}
+
 func (h *FolderHandler) UpdateFolder(c fiber.Ctx) error {
 	folderIDStr := c.Params("id")
 	folderID, err := strconv.ParseUint(folderIDStr, 10, 32)

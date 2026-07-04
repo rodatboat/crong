@@ -13,6 +13,7 @@ func FolderRoutes(app fiber.Router, serviceContainer *container.Container) {
 
 	folders.Post("/", middleware.Protected(serviceContainer.UserRepository), handler.CreateFolder)
 	folders.Get("/", middleware.Protected(serviceContainer.UserRepository), handler.ReadFolders)
+	folders.Get("/:id/jobs", middleware.Protected(serviceContainer.UserRepository), handler.GetFolderJobsByID)
 	folders.Get("/:id", middleware.Protected(serviceContainer.UserRepository), handler.GetFoldersDetailsByID)
 	folders.Put("/:id", middleware.Protected(serviceContainer.UserRepository), handler.UpdateFolder)
 	folders.Delete("/:id", middleware.Protected(serviceContainer.UserRepository), handler.DeleteFolder)
