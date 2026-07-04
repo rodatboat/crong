@@ -55,7 +55,7 @@ func (s *UserService) LoginUser(email string, password string) (*models.User, er
 	userEntity, err := s.userRepo.FindByEmail(email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, resp.ErrBadRequest
+			return nil, resp.ErrInvalidLogin
 		}
 		return nil, err
 	}
