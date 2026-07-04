@@ -34,6 +34,9 @@ func (h *UserHandler) LoginUser(c fiber.Ctx) error {
 
 	user, err := h.userService.LoginUser(req.Email, req.Password)
 	if err != nil {
+		if errors.Is(err, resp.ErrInvalidLogin) {
+			return resp.Send(c, resp.Response(fiber.StatusBadRequest, resp.ErrInvalidLogin.Error(), nil))
+		}
 		return resp.ErrorResponse(c, err)
 	}
 
