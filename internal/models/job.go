@@ -28,18 +28,18 @@ type Job struct {
 }
 
 type JobCreateRequest struct {
-	Title    string `json:"title" validate:"required,max=255"`
-	Url      string `json:"url" validate:"required,url,max=2048"`
+	Title    string `json:"title" validate:"required,min=1,max=255"`
+	Url      string `json:"url" validate:"required,url,min=1,max=2048"`
 	FolderID *uint  `json:"folder_id"`
 
 	Method  entities.ReqMethod `json:"method" validate:"validmethod"`
 	Headers []JobHeaders       `json:"headers"`
 	Auth    JobAuth            `json:"auth"`
 	Body    string             `json:"body" validate:"max=10000"`
-	Cron    string             `json:"cron" validate:"required,validcron,max=100"`
+	Cron    string             `json:"cron" validate:"required,min=1,validcron,max=100"`
 
 	Timezone string `json:"timezone" validate:"validtimezone,max=50" default:"America/Chicago"`
-	Timeout  int    `json:"timeout" validate:"required,max=30"`
+	Timeout  int    `json:"timeout" validate:"required,min=0,max=30"`
 	Enabled  bool   `json:"enabled"`
 }
 
@@ -54,8 +54,8 @@ type JobAuth struct {
 }
 
 type JobHeaders struct {
-	Key   string `json:"key" validate:"max=255"`
-	Value string `json:"value" validate:"max=1024"`
+	Key   string `json:"key" validate:"required,min=1,max=255"`
+	Value string `json:"value" validate:"required,min=1,max=1024"`
 }
 
 type JobExecution struct {

@@ -14,9 +14,9 @@ type Folder struct {
 }
 
 type FolderCreate struct {
-	Name string `json:"name" validate:"required,max=255"`
+	Name string `json:"name" validate:"required,min=1,max=255"`
 }
 
 type FolderUpdate struct {
-	Name string `json:"name" validate:"required,max=255"`
+	Name string `json:"name" validate:"required,min=1,max=255"`
 }
